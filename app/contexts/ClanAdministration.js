@@ -1,29 +1,24 @@
 import { Context } from '../classes/Context'
 import { Command } from '../classes/Command'
 
-class ClanAdministration extends Context {
+export default class ClanAdministration extends Context {
   constructor (user, userID, channelID, message, event) {
+    super(user, userID, channelID, message, event)
 
     // Commands for ClanAdministration Context
     this.commands = [
-      new Command('!add', 'clanlead'),
-      new Command('!addlead', ['clanlead','clanadmin']),
-      new Command('!addclan', 'clanadmin'),
-      new Command('!removeclan', 'clanadmin')
+      new Command('!add', 'clanlead', this._addMember),
+      new Command('!addlead', ['clanlead', 'clanadmin', this._addLead]),
+      new Command('!addclan', 'clanadmin', this._addClan),
+      new Command('!removeclan', 'clanadmin', this._removeClan),
+      new Command('!remove', ['clanlead', 'clanadmin'], this._removeMember)
     ]
-
-    // Variables
-    this.user = user
-    this.userID = userID
-    this.channelID = channelID
-    this.message = message
-    this.event = event
   }
 
   /**
    * Validate Context
    * @public
-   * @returns boolean
+   * @returns Command
    */
   validate () {
 
@@ -74,5 +69,3 @@ class ClanAdministration extends Context {
 
   }
 }
-
-export { ClanAdministration }
