@@ -1,0 +1,23 @@
+{
+  "name": "soldatbr-bot",
+  "version": "0.0.1",
+  "description": "A Soldat Brazilian BOT competitive manager",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "soldat",
+    "soldatbr",
+    "bot"
+  ],
+  "author": "Luis Fedrizze <luisfedrizze@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "discord.io": "^2.5.3"
+  },
+  "type": "module",
+  "devDependencies": {
+    "eslint": "^7.4.0"
+  }
+}
