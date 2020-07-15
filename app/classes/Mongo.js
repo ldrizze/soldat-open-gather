@@ -16,6 +16,7 @@ const url = `mongodb://${user}:${password}@${host}:${port}/?authMechanism=${auth
 
 // Create a new MongoClient
 const client = new MongoClient(url)
+const db = client.db('soldatbtbot')
 
 function operation (fn) {
   client.connect(err => {
@@ -27,4 +28,4 @@ function operation (fn) {
   })
 }
 
-export { client, operation }
+export { client, operation, db }

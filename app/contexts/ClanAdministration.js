@@ -1,5 +1,7 @@
 import { Context } from '../classes/Context'
 import { Command } from '../classes/Command'
+import { operation, db } from '../classes/Mongo'
+import slugify from 'slugify'
 
 export default class ClanAdministration extends Context {
   constructor (user, channel, message) {
@@ -33,7 +35,18 @@ export default class ClanAdministration extends Context {
    * @return string
    */
   _addClan () {
-    // TODO Create a clan in DB
+    operation(() => {
+      const message = this.message.split(' ')
+
+      if (message.length === 2) {
+        const collection = db.collection('clans')
+        collection.insertOne({
+          slug: slugify(message[1]),
+          name: message[1],
+          added_by: this.user
+        })
+      }
+    })
   }
 
   /**

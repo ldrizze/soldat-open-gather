@@ -20,7 +20,9 @@
   "license": "MIT",
   "dependencies": {
     "discord.js": "^12.2.0",
-    "mongodb": "^3.5.9"
+    "mongodb": "^3.5.9",
+    "slugify": "^1.4.4",
+    "uuid": "^8.2.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",
