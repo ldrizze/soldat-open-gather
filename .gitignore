@@ -117,3 +117,7 @@ dist
 
 # VSCode
 .vscode
+
+# Docker
+.data/
+.docker.env

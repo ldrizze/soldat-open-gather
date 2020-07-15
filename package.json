@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "babel app -d dist",
-    "start": "dist/init.js",
+    "start": "node dist/init.js",
     "build:dist": "babel app -d dist --source-maps=false",
     "build:debug": "npm run build && node --inspect dist/init.js",
     "serve": "nodemon --watch app --exec npm run build:debug"
@@ -19,7 +19,8 @@
   "author": "Luis Fedrizze <luisfedrizze@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "discord.js": "^12.2.0"
+    "discord.js": "^12.2.0",
+    "mongodb": "^3.5.9"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",

@@ -1,0 +1,19 @@
+version: '3'
+services:
+  #soldatbrbot:
+  #  build: .
+  #  ports:
+  #    - 3000:3000
+
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27107
+    volumes:
+      - ./.data:/data/db
+    env_file: .docker.env
+
+networks:
+  soldatbrbotnetwork:
+    drive: bridge
