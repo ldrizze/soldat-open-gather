@@ -15,6 +15,11 @@ export default class Logger {
     console.error(`[ERROR][${this.tag}] ${d}`)
   }
 
+  w (d) {
+    if (typeof d === 'object') d = JSON.stringify(d)
+    console.error(`[WARNING][${this.tag}] ${d}`)
+  }
+
   d (d) {
     if (!Config.debug) return
     if (typeof d === 'object') d = JSON.stringify(d)
