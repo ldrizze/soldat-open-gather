@@ -2,16 +2,16 @@ import { Context } from '../classes/Context'
 import { Command } from '../classes/Command'
 
 export default class ClanAdministration extends Context {
-  constructor (user, userID, channelID, message, event) {
-    super(user, userID, channelID, message, event)
+  constructor (user, channel, message) {
+    super(user, channel, message)
 
     // Commands for ClanAdministration Context
     this.commands = [
-      new Command('!add', 'clanlead', this._addMember),
-      new Command('!addlead', ['clanlead', 'clanadmin', this._addLead]),
-      new Command('!addclan', 'clanadmin', this._addClan),
-      new Command('!removeclan', 'clanadmin', this._removeClan),
-      new Command('!remove', ['clanlead', 'clanadmin'], this._removeMember)
+      new Command('add', 'clanlead', this._addMember),
+      new Command('addlead', ['clanlead', 'clanadmin'], this._addLead),
+      new Command('addclan', 'clanadmin', this._addClan),
+      new Command('removeclan', 'clanadmin', this._removeClan),
+      new Command('remove', ['clanlead', 'clanadmin'], this._removeMember)
     ]
   }
 
@@ -21,7 +21,10 @@ export default class ClanAdministration extends Context {
    * @returns Command
    */
   validate () {
-
+    const command = this._validateCommands()
+    if (command) {
+      // TODO Validate if is correct channel
+    }
   }
 
   /**
@@ -30,7 +33,7 @@ export default class ClanAdministration extends Context {
    * @return string
    */
   _addClan () {
-
+    // TODO Create a clan in DB
   }
 
   /**
