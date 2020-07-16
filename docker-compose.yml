@@ -2,8 +2,12 @@ version: '3'
 services:
 #  soldatbrbot:
 #    build: .
+#    volumes:
+#      - .:/app
 #    ports:
 #      - 3000:3000
+#    networks:
+#      - bot-network
 
   mongodb:
     image: mongo:latest
@@ -13,3 +17,9 @@ services:
       - .docker.env
     volumes:
       - ./.data:/data/db
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge

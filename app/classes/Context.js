@@ -1,11 +1,11 @@
-class Context {
+module.exports = class Context {
   constructor (user, channel, message) {
     this.message = message
     this.user = user
     this.channel = channel
   }
 
-  validate () {
+  validate (roles) {
     const command = this._validateCommands()
     if (command) {
       if (this._validateCommandRole(command)) return command
@@ -30,5 +30,3 @@ class Context {
     return true
   }
 }
-
-export { Context }

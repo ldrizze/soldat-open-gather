@@ -4,7 +4,8 @@
   "description": "A Soldat Brazilian BOT competitive manager",
   "main": "dist/init.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha --exit",
+    "build:test" : "npm run build && npm run test",
     "build": "babel app -d dist",
     "start": "node dist/init.js",
     "build:dist": "babel app -d dist --source-maps=false",
@@ -28,12 +29,15 @@
     "@babel/cli": "^7.10.5",
     "@babel/core": "^7.10.5",
     "@babel/preset-env": "^7.10.4",
+    "chai": "^4.2.0",
+    "dotenv": "^8.2.0",
     "eslint": "^7.4.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
+    "mocha": "^8.0.1",
     "nodemon": "^2.0.4"
   }
 }

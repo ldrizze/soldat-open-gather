@@ -1,7 +1,7 @@
-import mongodb from 'mongodb'
-import Logger from './Logger'
-import Config from '../config'
-import assert from 'assert'
+const mongodb = require('mongodb')
+const Logger = require('./Logger')
+const Config = require('../config')
+const assert = require('assert')
 
 const MongoClient = mongodb.MongoClient
 const user = encodeURIComponent(Config.database.username)
@@ -15,17 +15,21 @@ const log = new Logger('MONGO')
 const url = `mongodb://${user}:${password}@${host}:${port}/?authMechanism=${authMechanism}`
 
 // Create a new MongoClient
-const client = new MongoClient(url)
-const db = client.db('soldatbtbot')
+const client = new MongoClient(url, {
+  useUnifiedTopology: true,
+  useNewUrlParser: true
+})
+
+let db = {}
+client.connect(err => {
+  assert.equal(null, err)
+  log.i('Connected, making operation')
+  db = client.db('soldatbtbot')
+})
 
 function operation (fn) {
-  client.connect(err => {
-    assert.equal(null, err)
-    log.i('Connected, making operation')
-
-    if (typeof fn === 'function') fn()
-    else log.w('Operation callback is not a function')
-  })
+  if (typeof fn === 'function') fn(db)
+  else log.w('Operation callback is not a function')
 }
 
-export { client, operation, db }
+exports.operation = operation

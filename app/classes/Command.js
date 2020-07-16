@@ -1,11 +1,9 @@
-import Config from '../config'
+const Config = require('../config')
 
-class Command {
+module.exports = class Command {
   constructor (command, role, fn) {
     this.command = `${Config.commandPrefix}${command}`
     this.role = role
     this.fn = fn
   }
 }
-
-export { Command }

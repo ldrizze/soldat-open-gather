@@ -1,6 +1,6 @@
-import Config from '../config'
+const Config = require('../config')
 
-export default class Logger {
+module.exports = class Logger {
   constructor (tag) {
     this.tag = tag
   }

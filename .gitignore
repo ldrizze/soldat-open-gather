@@ -121,3 +121,4 @@ dist
 # Docker
 .data/
 .docker.env
+.test.env
