@@ -93,8 +93,8 @@ module.exports = class ClanAdministration extends Context {
           clan.leads.push(this.targetUser)
           this.log.i(`Updating clan information to: ${JSON.stringify(clan)}`)
           collection.updateOne({ slug: clan.slug }, { $set: { leads: clan.leads } }, (error, result) => {
-            this.log.i(result)
-            this.log.i(error)
+            this.log.d(result)
+            this.log.d(error)
             resolve('Lead has been added')
           })
         })
