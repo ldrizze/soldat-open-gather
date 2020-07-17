@@ -1,5 +1,3 @@
-const Config = require('../config')
-
 module.exports = class Context {
   constructor (user, channel, message, targetUser) {
     this.message = message
