@@ -10,8 +10,8 @@ const {
 const config = require('../config')
 
 module.exports = class ClanAdministration extends Context {
-  constructor (user, channel, message, targetUser) {
-    super(user, channel, message, targetUser)
+  constructor (user, channel, message) {
+    super(user, channel, message)
 
     // Commands for ClanAdministration Context
     this.commands = [

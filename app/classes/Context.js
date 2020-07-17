@@ -1,9 +1,8 @@
 module.exports = class Context {
-  constructor (user, channel, message, targetUser) {
+  constructor (user, channel, message) {
     this.message = message
     this.user = user
     this.channel = channel
-    this.targetUser = targetUser
   }
 
   async validate () {
