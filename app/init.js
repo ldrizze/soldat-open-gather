@@ -13,16 +13,18 @@ BOT.on('ready', () => {
 BOT.on('message', async (event) => {
   for (const Context of Contexts) {
     const contextInstance = new Context(event.author.id, event.channel.id, event.content)
-    const command = contextInstance.validate(event.member.roles, event)
-    if (command) {
-      if (command.fn) {
-        try {
+    try {
+      const command = contextInstance.validate(event.member.roles, event)
+      if (command) {
+        if (command.fn) {
           event.reply(command.fn.apply(contextInstance, event))
-        } catch (error) {
-          event.reply(error.message)
+        } else {
+          log.w(`Command ${command.command} has no function`)
         }
+        break
       }
-      break
+    } catch (error) {
+      event.reply(error.message)
     }
   }
 })
