@@ -56,11 +56,11 @@ module.exports = class ClanAdministration extends Context {
       // Validate command channel
       if (command.commandName === 'add' || command.commandName === 'remove') {
         this.clan = await this.clanRepository.findByChannel(this.channel)
-        if (!this.clan) throw new Silence()
+        if (!this.clan) throw new InvalidChannel()
       }
 
       if (command.commandName === 'addclan' || command.commandName === 'removeclan') {
-        if (this.channel !== config.channels.clanadmin) throw new Silence()
+        if (this.channel !== config.channels.clanadmin) throw new InvalidChannel()
       }
 
       return command
