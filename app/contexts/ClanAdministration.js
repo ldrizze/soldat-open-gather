@@ -96,17 +96,7 @@ module.exports = class ClanAdministration extends Context {
     })
     const voice = await event.guild.channels.create(name, {
       type: 'voice',
-      parent: config.channels.clancategory,
-      permissionOverwrites: [
-        {
-          id: config.roles.everyone,
-          deny: ['VIEW_CHANNEL']
-        },
-        {
-          id: role.id,
-          allow: ['VIEW_CHANNEL']
-        }
-      ]
+      parent: config.channels.voiceclancategory
     })
     await this.clanRepository.create(name, channel.id, voice.id, role.id, this.user)
     return `Clã ${name} criado com sucesso!`

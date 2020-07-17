@@ -20,6 +20,7 @@ module.exports = {
   channels: {
     clanadmin: '733647075484631071',
     clancategory: '715295359827443903',
+    voiceclancategory: '715200941963345920',
     botcommands: '733670794009378927'
   }
 }
