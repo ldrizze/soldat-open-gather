@@ -1,3 +1,6 @@
+/*eslint-disable*/
+
+require('dotenv').config()
 const Discord = require('discord.js')
 const Config = require('./config')
 const Logger = require('./classes/Logger')
@@ -15,18 +18,23 @@ BOT.on('message', async (event) => {
   for (const Context of Contexts) {
     const contextInstance = new Context(event.author.id, event.channel.id, event.content)
     try {
-      const command = await contextInstance.validate(event.member.roles, event)
+      const roles = []
+      event.member.roles.cache.forEach(role => roles.push(role.id))
+      const command = await contextInstance.validate(roles)
       if (command) {
         if (command.fn) {
-          event.reply(command.fn.apply(contextInstance, event))
+          const result = await command.fn(event)
+          if (typeof result === 'string')
+            event.reply(result)
         } else {
           log.w(`Command ${command.command} has no function`)
         }
         break
       }
     } catch (error) {
+      log.e(error.message)
       if (error instanceof Silence) return
-      event.reply(error.message)
+      //event.reply(error.message)
     }
   }
 })

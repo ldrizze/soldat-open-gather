@@ -7,7 +7,8 @@
     "test": "mocha --exit",
     "build:test" : "npm run build && npm run test",
     "build": "babel app -d dist",
-    "start": "node dist/init.js",
+    "start": "node app/init.js",
+    "debug": "nodemon --watch app --exec node --inspect app/init.js",
     "build:dist": "babel app -d dist --source-maps=false",
     "build:debug": "npm run build && node --inspect dist/init.js",
     "serve": "nodemon --watch app --exec npm run build:debug"

@@ -43,13 +43,13 @@ module.exports = class ClanAdministration extends Context {
           }
         }
 
-        if (userRoles.length === 0) throw new Silence()
+        if (userRoles.length === 0) throw new Silence(this.user)
         else {
           let shouldEnd = true
-          for (const userRole in userRoles) {
-            if (this._validateCommandRole(userRole)) shouldEnd = false
+          for (const userRole of userRoles) {
+            if (this._validateCommandRole(command, userRole)) shouldEnd = false
           }
-          if (shouldEnd) throw new Silence()
+          if (shouldEnd) throw new Silence(this.user)
         }
       }
 
@@ -82,6 +82,7 @@ module.exports = class ClanAdministration extends Context {
     })
     const channel = await event.guild.channels.create(name, {
       type: 'text',
+      parent: config.channels.clancategory,
       permissionOverwrites: [
         {
           id: config.roles.everyone,
@@ -94,6 +95,7 @@ module.exports = class ClanAdministration extends Context {
       ]
     })
     await this.clanRepository.create(name, channel.id, role.id, this.user)
+    return `Clã ${name} criado com sucesso!`
   }
 
   /**
@@ -107,10 +109,11 @@ module.exports = class ClanAdministration extends Context {
     if (member && clanRole) {
       const clanExists = await this.clanRepository.findByRole(clanRole.id)
       if (clanExists) {
-        const hasRole = member.roles.get(clanRole)
+        const hasRole = member.roles.cache.get(clanRole)
         if (!hasRole) {
-          await member.roles.add([clanRole.id, config.roles.clanlead])
-          return `Usuário ${member.name} adicionado como líder do clã ${clanRole.name}`
+          await member.roles.add(clanRole.id)
+          await member.roles.add(config.roles.clanlead)
+          return `${member.displayName} foi adicionado como líder do clã ${clanRole.name}`
         } else {
           throw new AlreadyMember()
         }
@@ -131,10 +134,10 @@ module.exports = class ClanAdministration extends Context {
     if (member && clanRole) {
       const clanExists = await this.clanRepository.findByRole(clanRole.id)
       if (clanExists) {
-        const hasRole = member.roles.get(clanRole)
+        const hasRole = member.roles.cache.get(clanRole)
         if (!hasRole) {
           await member.roles.add(clanRole)
-          return `${member.name} agora é membro do clã ${clanRole.name}`
+          return `${member.displayName} agora é membro do clã ${clanRole.name}`
         } else {
           throw new AlreadyMember()
         }
@@ -158,10 +161,11 @@ module.exports = class ClanAdministration extends Context {
     if (member && clanRole) {
       const clanExists = await this.clanRepository.findByRole(clanRole.id)
       if (clanExists) {
-        const hasRole = member.roles.get(clanRole)
+        const hasRole = member.roles.cache.has(clanRole.id)
         if (hasRole) {
-          await member.roles.remove([clanRole.id, config.roles.clanlead])
-          return `Membro ${member.name} removido do clã ${clanRole.name}`
+          await member.roles.remove(clanRole.id)
+          await member.roles.remove(config.roles.clanlead).catch(this.log.e)
+          return `Membro ${member.displayName} removido do clã ${clanRole.name}`
         } else {
           throw new NotClanMember()
         }
@@ -183,9 +187,10 @@ module.exports = class ClanAdministration extends Context {
     if (clanRole) {
       const clan = await this.clanRepository.findByRole(clanRole.id)
       if (clan) {
-        await event.guild.channels.remove(clan.channel)
-        await event.guild.roles.remove(clan.role)
+        await event.guild.channels.resolve(clan.channel).delete()
+        await event.guild.roles.resolve(clan.role).delete()
         await this.clanRepository.delete(clan.slug)
+        return `Clã ${clan.name} removido com sucesso!`
       } else {
         throw new ClanNotFound()
       }

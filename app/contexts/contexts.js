@@ -1,4 +1,4 @@
-import ClanAdministration from './ClanAdministration'
+const ClanAdministration = require('./ClanAdministration')
 
 module.exports = [
   ClanAdministration

@@ -23,7 +23,7 @@ const client = new MongoClient(url, {
 let db = {}
 client.connect(err => {
   assert.equal(null, err)
-  log.i('Connected, making operation')
+  log.i('Connected')
   db = client.db('soldatbtbot')
 })
 
