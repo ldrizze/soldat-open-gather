@@ -22,7 +22,7 @@ module.exports = class ClanRepository {
     return this.db.collection('clans').deleteOne({ slug })
   }
 
-  async create (name, channel, role, addedBy) {
+  async create (name, channel, voice, role, addedBy) {
     return this.db.collection('clans').insertOne({
       name, channel, role, addedBy, slug: slugify(name)
     })

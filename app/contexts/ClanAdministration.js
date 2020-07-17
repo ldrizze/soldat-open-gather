@@ -94,7 +94,21 @@ module.exports = class ClanAdministration extends Context {
         }
       ]
     })
-    await this.clanRepository.create(name, channel.id, role.id, this.user)
+    const voice = await event.guild.channels.create(name, {
+      type: 'voice',
+      parent: config.channels.clancategory,
+      permissionOverwrites: [
+        {
+          id: config.roles.everyone,
+          deny: ['VIEW_CHANNEL']
+        },
+        {
+          id: role.id,
+          allow: ['VIEW_CHANNEL']
+        }
+      ]
+    })
+    await this.clanRepository.create(name, channel.id, voice.id, role.id, this.user)
     return `Clã ${name} criado com sucesso!`
   }
 
@@ -188,6 +202,7 @@ module.exports = class ClanAdministration extends Context {
       const clan = await this.clanRepository.findByRole(clanRole.id)
       if (clan) {
         await event.guild.channels.resolve(clan.channel).delete()
+        await event.guild.channels.resolve(clan.voice).delete()
         await event.guild.roles.resolve(clan.role).delete()
         await this.clanRepository.delete(clan.slug)
         return `Clã ${clan.name} removido com sucesso!`
