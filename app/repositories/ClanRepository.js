@@ -1,51 +1,47 @@
 
-const { operation, getDB } = require('../classes/Mongo')
+const { getDB } = require('../classes/Mongo')
+const slugify = require('slugify')
 
 module.exports = class ClanRepository {
   constructor () {
     this.db = getDB()
   }
 
-  find (slug) {
-    return new Promise((resolve, reject) => {
-      operation((db) => {
-        const collection = db.collection('clans')
-        collection.find({
-          slug: slug
-        }).toArray((error, result) => {
-          if (error) return reject(error)
-          const clan = result[0]
-          resolve(clan)
-        })
-      })
+  async find (slug) {
+    const clan =
+      await this.db.collection('clans').find({ slug: slug }).limit(1).toArray()
+
+    if (clan.length > 0) {
+      return clan[0]
+    }
+
+    return null
+  }
+
+  async delete (slug) {
+    return this.db.collection('clans').deleteOne({ slug })
+  }
+
+  async create (name, channel, role, addedBy) {
+    return this.db.collection('clans').insertOne({
+      name, channel, role, addedBy, slug: slugify(name)
     })
-  }
-
-  async findByMember (userId) {
-    const clan =
-      await this.db.collection('clans').find({ members: userId }).limit(1).toArray()
-
-    if (clan.length > 0) {
-      return clan[0]
-    }
-
-    return null
-  }
-
-  async findByLead (userId) {
-    const clan =
-      await this.db.collection('clans').find({ leads: userId }).limit(1).toArray()
-
-    if (clan.length > 0) {
-      return clan[0]
-    }
-
-    return null
   }
 
   async findByChannel (channel) {
     const clan =
       await this.db.collection('clans').find({ channel }).limit(1).toArray()
+
+    if (clan.length > 0) {
+      return clan[0]
+    }
+
+    return null
+  }
+
+  async findByRole (role) {
+    const clan =
+      await this.db.collection('clans').find({ role }).limit(1).toArray()
 
     if (clan.length > 0) {
       return clan[0]

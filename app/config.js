@@ -12,7 +12,8 @@ module.exports = {
   // TODO Refactor, send role map to DB
   roles: {
     clanadmin: 715556952133992528,
-    clanlead: 733597911811751966
+    clanlead: 733597911811751966,
+    everyone: 238690452675493888
   },
 
   // TODO Refactor, send channels map to DB

@@ -4,10 +4,9 @@ const Logger = require('../classes/Logger')
 const ClanRepository = require('../repositories/ClanRepository')
 const {
   AlreadyMember, ClanNotFound,
-  NotClanMember
+  NotClanMember, InvalidChannel,
+  Silence
 } = require('../classes/Errors')
-const { operation } = require('../classes/Mongo')
-const slugify = require('slugify')
 const config = require('../config')
 
 module.exports = class ClanAdministration extends Context {
@@ -44,21 +43,24 @@ module.exports = class ClanAdministration extends Context {
           }
         }
 
-        if (userRoles.length === 0) return null
+        if (userRoles.length === 0) throw new Silence()
         else {
           let shouldEnd = true
           for (const userRole in userRoles) {
             if (this._validateCommandRole(userRole)) shouldEnd = false
           }
-          if (shouldEnd) return null
+          if (shouldEnd) throw new Silence()
         }
       }
 
       // Validate command channel
       if (command.commandName === 'add' || command.commandName === 'remove') {
         this.clan = await this.clanRepository.findByChannel(this.channel)
-        if (!this.clan) return null
-        if (this.clan.members.indexOf(this.user) === -1) return null
+        if (!this.clan) throw new Silence()
+      }
+
+      if (command.commandName === 'addclan' || command.commandName === 'removeclan') {
+        if (this.channel !== config.channels.clanadmin) throw new Silence()
       }
 
       return command
@@ -70,24 +72,28 @@ module.exports = class ClanAdministration extends Context {
    * @private
    * @return Promise<string>
    */
-  _addClan () {
-    return new Promise((resolve, reject) => {
-      operation((db) => {
-        const message = this.message.split(' ')
-        const collection = db.collection('clans')
-        const name = message[1]
-        this.log.i(`Creating new clan: ${this.user} - ${name}`)
-        collection.insertOne({
-          slug: slugify(name.toLowerCase()),
-          name: message[1],
-          added_by: this.user,
-          channel: this.channel,
-          leads: [],
-          members: []
-        })
-        resolve('Clan has been created')
-      })
+  async _addClan (event) {
+    const name = this.message.split(' ')[1]
+    const role = await event.guild.roles.create({
+      data: {
+        name,
+        color: 'ORANGE'
+      }
     })
+    const channel = await event.guild.channels.create(name, {
+      type: 'text',
+      permissionOverwrites: [
+        {
+          id: config.roles.everyone,
+          deny: ['VIEW_CHANNEL']
+        },
+        {
+          id: role.id,
+          allow: ['VIEW_CHANNEL']
+        }
+      ]
+    })
+    await this.clanRepository.create(name, channel.id, role.id, this.user)
   }
 
   /**
@@ -95,37 +101,23 @@ module.exports = class ClanAdministration extends Context {
    * @private
    * @returns string
    */
-  _addLead () {
-    return new Promise((resolve, reject) => {
-      operation((db) => {
-        const message = this.message.split(' ')
-        const name = message[1].toLowerCase()
-        this.log.i(`Finding clan information: ${this.user} - ${name}`)
-        const collection = db.collection('clans')
-        collection.find({
-          slug: slugify(name)
-        }).toArray((error, result) => {
-          const clan = result[0]
-          if (error) return reject(new Error('Cant find clan'))
-          if (!clan.leads) clan.leads = []
-
-          if (clan.leads.indexOf(this.targetUser) !== -1) {
-            return reject(new Error('Esse usuário já é líder!'))
-          } else if (clan.members.indexOf(this.targetUser) !== -1) {
-            const memberIndex = clan.members.indexOf(this.targetUser)
-            clan.members.splice(memberIndex, 1) // Remove from clan member and add to lead
-          }
-
-          clan.leads.push(this.targetUser)
-          this.log.i(`Updating clan information to: ${JSON.stringify(clan)}`)
-          collection.updateOne({ slug: clan.slug }, { $set: { leads: clan.leads } }, (error, result) => {
-            this.log.d(result)
-            this.log.d(error)
-            resolve('Lead has been added')
-          })
-        })
-      })
-    })
+  async _addLead (event) {
+    const member = event.mentions.members.first()
+    const clanRole = event.mentions.roles.first()
+    if (member && clanRole) {
+      const clanExists = await this.clanRepository.findByRole(clanRole.id)
+      if (clanExists) {
+        const hasRole = member.roles.get(clanRole)
+        if (!hasRole) {
+          await member.roles.add([clanRole.id, config.roles.clanlead])
+          return `Usuário ${member.name} adicionado como líder do clã ${clanRole.name}`
+        } else {
+          throw new AlreadyMember()
+        }
+      } else {
+        throw new ClanNotFound()
+      }
+    }
   }
 
   /**
@@ -133,22 +125,24 @@ module.exports = class ClanAdministration extends Context {
    * @private
    * @returns string
    */
-  async _addMember () {
-    const clan =
-      await this.clanRepository.findByLead(
-        this.user
-      ).catch(() => false)
-
-    if (clan) {
-      if (clan.members.indexOf(this.targetUser) === -1) {
-        clan.members.push(this.targetUser)
-        await this.clanRepository.update(clan.slug, { members: clan.members })
-        return 'Membro adicionado ao clã!'
+  async _addMember (event) {
+    const member = event.mentions.members.first()
+    const clanRole = event.mentions.roles.first()
+    if (member && clanRole) {
+      const clanExists = await this.clanRepository.findByRole(clanRole.id)
+      if (clanExists) {
+        const hasRole = member.roles.get(clanRole)
+        if (!hasRole) {
+          await member.roles.add(clanRole)
+          return `${member.name} agora é membro do clã ${clanRole.name}`
+        } else {
+          throw new AlreadyMember()
+        }
       } else {
-        throw new AlreadyMember()
+        throw new ClanNotFound()
       }
     } else {
-      throw new ClanNotFound()
+      // TODO Wrong commands
     }
   }
 
@@ -157,24 +151,25 @@ module.exports = class ClanAdministration extends Context {
    * @private
    * @returns string
    */
-  async _removeMember () {
-    const clan =
-      await this.clanRepository.findByLead(
-        this.user
-      ).catch(() => false)
+  async _removeMember (event) {
+    const member = event.mentions.members.first()
+    const clanRole = event.mentions.roles.first()
 
-    if (clan) {
-      if (clan.members.indexOf(this.targetUser) !== -1) {
-        const index = clan.members.indexOf(this.targetUser)
-        clan.members.splice(index, 1)
-        await this.clanRepository.update(clan.slug, { members: clan.members })
-
-        return 'Membro removido!'
+    if (member && clanRole) {
+      const clanExists = await this.clanRepository.findByRole(clanRole.id)
+      if (clanExists) {
+        const hasRole = member.roles.get(clanRole)
+        if (hasRole) {
+          await member.roles.remove([clanRole.id, config.roles.clanlead])
+          return `Membro ${member.name} removido do clã ${clanRole.name}`
+        } else {
+          throw new NotClanMember()
+        }
       } else {
-        throw new NotClanMember()
+        throw new ClanNotFound()
       }
     } else {
-      throw new ClanNotFound()
+      // TODO Wrong commands
     }
   }
 
@@ -183,18 +178,19 @@ module.exports = class ClanAdministration extends Context {
    * @private
    * @returns string
    */
-  _removeClan () {
-    return new Promise((resolve, reject) => {
-      operation((db) => {
-        const message = this.message.split(' ')
-        const collection = db.collection('clans')
-        const name = message[1]
-        this.log.i(`Removing clan: ${this.user} - ${name}`)
-        collection.deleteMany({
-          slug: slugify(name.toLowerCase())
-        })
-        resolve('Clan has been created')
-      })
-    })
+  async _removeClan (event) {
+    const clanRole = event.mentions.roles.first()
+    if (clanRole) {
+      const clan = await this.clanRepository.findByRole(clanRole.id)
+      if (clan) {
+        await event.guild.channels.remove(clan.channel)
+        await event.guild.roles.remove(clan.role)
+        await this.clanRepository.delete(clan.slug)
+      } else {
+        throw new ClanNotFound()
+      }
+    } else {
+      // TODO Is not a clan role
+    }
   }
 }

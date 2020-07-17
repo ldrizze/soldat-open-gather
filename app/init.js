@@ -1,7 +1,8 @@
-import Discord from 'discord.js'
-import Config from './config'
-import Logger from './classes/Logger'
-import Contexts from './contexts/contexts'
+const Discord = require('discord.js')
+const Config = require('./config')
+const Logger = require('./classes/Logger')
+const Contexts = require('./contexts/contexts')
+const { Silence } = require('./classes/Errors')
 
 const log = new Logger('INIT')
 const BOT = new Discord.Client()
@@ -24,6 +25,7 @@ BOT.on('message', async (event) => {
         break
       }
     } catch (error) {
+      if (error instanceof Silence) return
       event.reply(error.message)
     }
   }

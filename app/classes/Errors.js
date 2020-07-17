@@ -21,3 +21,9 @@ exports.NotClanMember = class NotClanMember extends Error {
     super('Esse usuário não é membro do seu clã.')
   }
 }
+
+exports.InvalidChannel = class InvalidChannel extends Error {
+  constructor () {
+    super('Canal inválido para este comando!')
+  }
+}
