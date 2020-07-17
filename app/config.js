@@ -13,12 +13,13 @@ module.exports = {
   roles: {
     clanadmin: '715556952133992528',
     clanlead: '733597911811751966',
-    everyone: '238690452675493888'
+    everyone: '238690452675493888',
   },
 
   // TODO Refactor, send channels map to DB
   channels: {
     clanadmin: '733647075484631071',
-    clancategory: '715295359827443903'
+    clancategory: '715295359827443903',
+    botcommands: '733670794009378927'
   }
 }
