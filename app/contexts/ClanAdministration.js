@@ -1,23 +1,29 @@
 const Context = require('../classes/Context')
 const Command = require('../classes/Command')
 const Logger = require('../classes/Logger')
+const ClanRepository = require('../repositories/ClanRepository')
+const {
+  AlreadyMember, ClanNotFound,
+  NotClanMember
+} = require('../classes/Errors')
 const { operation } = require('../classes/Mongo')
 const slugify = require('slugify')
+
 module.exports = class ClanAdministration extends Context {
-  constructor (user, channel, message, targetUserId) {
-    super(user, channel, message, targetUserId)
+  constructor (user, channel, message, targetUser) {
+    super(user, channel, message, targetUser)
 
     // Commands for ClanAdministration Context
     this.commands = [
-      new Command('add', 'clanlead', this._addMember),
+      new Command('add', 'clanlead', this._addMember.bind(this)),
       new Command('addlead', ['clanlead', 'clanadmin'], this._addLead.bind(this)),
       new Command('addclan', 'clanadmin', this._addClan.bind(this)),
       new Command('removeclan', 'clanadmin', this._removeClan.bind(this)),
-      new Command('remove', ['clanlead', 'clanadmin'], this._removeMember)
+      new Command('remove', ['clanlead', 'clanadmin'], this._removeMember.bind(this))
     ]
 
     this.log = new Logger('ClanAdministration')
-    this.targetUserId = targetUserId
+    this.clanRepository = new ClanRepository()
   }
 
   /**
@@ -25,7 +31,7 @@ module.exports = class ClanAdministration extends Context {
    * @public
    * @returns Command
    */
-  validate (roles) {
+  validate (roles, event) {
     const command = this._validateCommands()
     if (command) {
       // TODO Validate if is correct channel
@@ -49,6 +55,7 @@ module.exports = class ClanAdministration extends Context {
           slug: slugify(name.toLowerCase()),
           name: message[1],
           added_by: this.user,
+          channel: this.channel,
           leads: [],
           members: []
         })
@@ -75,7 +82,15 @@ module.exports = class ClanAdministration extends Context {
           const clan = result[0]
           if (error) return reject(new Error('Cant find clan'))
           if (!clan.leads) clan.leads = []
-          clan.leads.push(this.targetUserId)
+
+          if (clan.leads.indexOf(this.targetUser) !== -1) {
+            return reject(new Error('Esse usuário já é líder!'))
+          } else if (clan.members.indexOf(this.targetUser) !== -1) {
+            const memberIndex = clan.members.indexOf(this.targetUser)
+            clan.members.splice(memberIndex, 1) // Remove from clan member and add to lead
+          }
+
+          clan.leads.push(this.targetUser)
           this.log.i(`Updating clan information to: ${JSON.stringify(clan)}`)
           collection.updateOne({ slug: clan.slug }, { $set: { leads: clan.leads } }, (error, result) => {
             this.log.i(result)
@@ -92,8 +107,23 @@ module.exports = class ClanAdministration extends Context {
    * @private
    * @returns string
    */
-  _addMember () {
+  async _addMember () {
+    const clan =
+      await this.clanRepository.findByLead(
+        this.user
+      ).catch(() => false)
 
+    if (clan) {
+      if (clan.members.indexOf(this.targetUser) === -1) {
+        clan.members.push(this.targetUser)
+        await this.clanRepository.update(clan.slug, { members: clan.members })
+        return 'Membro adicionado ao clã!'
+      } else {
+        throw new AlreadyMember()
+      }
+    } else {
+      throw new ClanNotFound()
+    }
   }
 
   /**
@@ -101,8 +131,25 @@ module.exports = class ClanAdministration extends Context {
    * @private
    * @returns string
    */
-  _removeMember () {
+  async _removeMember () {
+    const clan =
+      await this.clanRepository.findByLead(
+        this.user
+      ).catch(() => false)
 
+    if (clan) {
+      if (clan.members.indexOf(this.targetUser) !== -1) {
+        const index = clan.members.indexOf(this.targetUser)
+        clan.members.splice(index, 1)
+        await this.clanRepository.update(clan.slug, { members: clan.members })
+
+        return 'Membro removido!'
+      } else {
+        throw new NotClanMember()
+      }
+    } else {
+      throw new ClanNotFound()
+    }
   }
 
   /**

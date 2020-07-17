@@ -3,7 +3,7 @@
 require('dotenv').config()
 const { expect } = require('chai')
 const createTestUsers = require('../seeds/createTestUsers')
-const ClanAdministration = require('../dist/contexts/ClanAdministration')
+const ClanAdministration = require('../app/contexts/ClanAdministration')
 
 describe('ClanAdministration context unit tests', () => {
   before(async () => {
@@ -21,6 +21,22 @@ describe('ClanAdministration context unit tests', () => {
   it('!addlead', async () => {
     const addLead = new ClanAdministration(99, 1, '!addlead XYZ @Fake', 100)
     const command = addLead.validate()
+    expect(command).be.an('object')
+    const result = await command.fn()
+    expect(result).be.an('string')
+  })
+
+  it('!add', async () => {
+    const addMember = new ClanAdministration(100, 1, '!add @FakeTwo', 101)
+    const command = addMember.validate()
+    expect(command).be.an('object')
+    const result = await command.fn()
+    expect(result).be.an('string')
+  })
+
+  it('!remove', async () => {
+    const removeMember = new ClanAdministration(100, 1, '!remove @FakeTwo', 101)
+    const command = removeMember.validate()
     expect(command).be.an('object')
     const result = await command.fn()
     expect(result).be.an('string')

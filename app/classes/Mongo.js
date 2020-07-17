@@ -32,4 +32,9 @@ function operation (fn) {
   else log.w('Operation callback is not a function')
 }
 
+function getDB () {
+  return db
+}
+
 exports.operation = operation
+exports.getDB = getDB

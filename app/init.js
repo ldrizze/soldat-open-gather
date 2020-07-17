@@ -10,12 +10,18 @@ BOT.on('ready', () => {
   log.i('Bot ready')
 })
 
-BOT.on('message', msg => {
+BOT.on('message', async (event) => {
   for (const Context of Contexts) {
-    const contextInstance = new Context(msg.author.id, msg.channel.id, msg.content)
-    const command = contextInstance.validate()
+    const contextInstance = new Context(event.author.id, event.channel.id, event.content)
+    const command = contextInstance.validate(event.member.roles, event)
     if (command) {
-      if (command.fn) command.fn.apply(contextInstance, msg)
+      if (command.fn) {
+        try {
+          event.reply(command.fn.apply(contextInstance, event))
+        } catch (error) {
+          event.reply(error.message)
+        }
+      }
       break
     }
   }

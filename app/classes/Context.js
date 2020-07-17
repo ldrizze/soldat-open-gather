@@ -1,8 +1,9 @@
 module.exports = class Context {
-  constructor (user, channel, message) {
+  constructor (user, channel, message, targetUser) {
     this.message = message
     this.user = user
     this.channel = channel
+    this.targetUser = targetUser
   }
 
   validate (roles) {

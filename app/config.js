@@ -1,6 +1,6 @@
 module.exports = {
   token: process.env.DISCORD_BOT_TOKEN,
-  debug: (process.env.DEBUG === 'true' ?? false),
+  debug: process.env.DEBUG === 'true',
   commandPrefix: '!',
   database: {
     username: process.env.MONGO_USERNAME,
