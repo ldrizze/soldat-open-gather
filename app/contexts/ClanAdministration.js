@@ -8,6 +8,7 @@ const {
 } = require('../classes/Errors')
 const { operation } = require('../classes/Mongo')
 const slugify = require('slugify')
+const config = require('../config')
 
 module.exports = class ClanAdministration extends Context {
   constructor (user, channel, message, targetUser) {
@@ -15,10 +16,10 @@ module.exports = class ClanAdministration extends Context {
 
     // Commands for ClanAdministration Context
     this.commands = [
-      new Command('add', 'clanlead', this._addMember.bind(this)),
+      new Command('add', ['clanlead'], this._addMember.bind(this)),
       new Command('addlead', ['clanlead', 'clanadmin'], this._addLead.bind(this)),
-      new Command('addclan', 'clanadmin', this._addClan.bind(this)),
-      new Command('removeclan', 'clanadmin', this._removeClan.bind(this)),
+      new Command('addclan', ['clanadmin'], this._addClan.bind(this)),
+      new Command('removeclan', ['clanadmin'], this._removeClan.bind(this)),
       new Command('remove', ['clanlead', 'clanadmin'], this._removeMember.bind(this))
     ]
 
@@ -29,12 +30,37 @@ module.exports = class ClanAdministration extends Context {
   /**
    * Validate Context
    * @public
-   * @returns Command
+   * @returns Command|null
    */
-  validate (roles, event) {
+  async validate (roles) {
     const command = this._validateCommands()
     if (command) {
-      // TODO Validate if is correct channel
+      // Validate command roles
+      if (command.role) {
+        const userRoles = []
+        for (const configRole in config.roles) {
+          for (const role of roles) {
+            if (role === config.roles[configRole]) userRoles.push(configRole)
+          }
+        }
+
+        if (userRoles.length === 0) return null
+        else {
+          let shouldEnd = true
+          for (const userRole in userRoles) {
+            if (this._validateCommandRole(userRole)) shouldEnd = false
+          }
+          if (shouldEnd) return null
+        }
+      }
+
+      // Validate command channel
+      if (command.commandName === 'add' || command.commandName === 'remove') {
+        this.clan = await this.clanRepository.findByChannel(this.channel)
+        if (!this.clan) return null
+        if (this.clan.members.indexOf(this.user) === -1) return null
+      }
+
       return command
     }
   }

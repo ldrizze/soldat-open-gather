@@ -14,7 +14,7 @@ BOT.on('message', async (event) => {
   for (const Context of Contexts) {
     const contextInstance = new Context(event.author.id, event.channel.id, event.content)
     try {
-      const command = contextInstance.validate(event.member.roles, event)
+      const command = await contextInstance.validate(event.member.roles, event)
       if (command) {
         if (command.fn) {
           event.reply(command.fn.apply(contextInstance, event))

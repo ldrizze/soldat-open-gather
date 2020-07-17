@@ -1,3 +1,5 @@
+const Config = require('../config')
+
 module.exports = class Context {
   constructor (user, channel, message, targetUser) {
     this.message = message
@@ -6,7 +8,7 @@ module.exports = class Context {
     this.targetUser = targetUser
   }
 
-  validate (roles) {
+  async validate () {
     const command = this._validateCommands()
     if (command) {
       if (this._validateCommandRole(command)) return command
@@ -26,8 +28,12 @@ module.exports = class Context {
     }
   }
 
-  _validateCommandRole (command) {
-    // TODO Find informations about user role in DB
-    return true
+  _validateCommandRole (command, role) {
+    if (command.role instanceof Array) {
+      return command.role.indexOf(role) !== -1
+    } else if (typeof command.role === 'string') {
+      return role === command.role
+    }
+    return false
   }
 }

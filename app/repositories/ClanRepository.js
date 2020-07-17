@@ -43,6 +43,17 @@ module.exports = class ClanRepository {
     return null
   }
 
+  async findByChannel (channel) {
+    const clan =
+      await this.db.collection('clans').find({ channel }).limit(1).toArray()
+
+    if (clan.length > 0) {
+      return clan[0]
+    }
+
+    return null
+  }
+
   async update (slug, fields) {
     return this.db.collection('clans').updateOne({ slug }, { $set: fields })
   }
