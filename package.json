@@ -5,7 +5,7 @@
   "main": "dist/init.js",
   "scripts": {
     "test": "mocha --exit",
-    "build:test" : "npm run build && npm run test",
+    "build:test": "npm run build && npm run test",
     "build": "babel app -d dist",
     "start": "node app/init.js",
     "debug": "nodemon --watch app --exec node --inspect app/init.js",

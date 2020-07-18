@@ -24,7 +24,7 @@ module.exports = class ClanRepository {
 
   async create (name, channel, voice, role, addedBy) {
     return this.db.collection('clans').insertOne({
-      name, channel, role, addedBy, slug: slugify(name)
+      name, channel, voice, role, addedBy, slug: slugify(name)
     })
   }
 
