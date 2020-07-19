@@ -33,6 +33,12 @@ exports.InvalidChannel = class InvalidChannel extends ResponseError {
 
 exports.NotClanLead = class NotClanLead extends ResponseError {
   constructor (clanName) {
-    super(`Você precisa ser lider do clã ${clanName} para utilizar esse comando`)
+    super(`Você precisa ser lider do clã ${clanName} para utilizar esse comando.`)
+  }
+}
+
+exports.CantRemoveLead = class CantRemoveLead extends ResponseError {
+  constructor () {
+    super('Você não pode remover outro líder, contate um administrador de clãs para isso.')
   }
 }

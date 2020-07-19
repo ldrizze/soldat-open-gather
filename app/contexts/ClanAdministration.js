@@ -5,8 +5,8 @@ const ClanRepository = require('../repositories/ClanRepository')
 const {
   AlreadyMember, ClanNotFound,
   NotClanMember, InvalidChannel,
-  Silence,
-  NotClanLead
+  Silence, NotClanLead,
+  CantRemoveLead
 } = require('../classes/Errors')
 const config = require('../config')
 
@@ -17,7 +17,7 @@ module.exports = class ClanAdministration extends Context {
     // Commands for ClanAdministration Context
     this.commands = [
       new Command('add', ['clanlead'], this._addMember.bind(this)),
-      new Command('addlead', ['clanlead', 'clanadmin'], this._addLead.bind(this)),
+      new Command('addlead', ['clanadmin'], this._addLead.bind(this)),
       new Command('addclan', ['clanadmin'], this._addClan.bind(this)),
       new Command('removeclan', ['clanadmin'], this._removeClan.bind(this)),
       new Command('remove', ['clanlead', 'clanadmin'], this._removeMember.bind(this))
@@ -152,7 +152,7 @@ module.exports = class ClanAdministration extends Context {
         throw new ClanNotFound()
       }
     } else {
-      // TODO Wrong commands
+      return 'Você precisa marcar o clã e o membro para adicionar, ex: !add @nome_do_membro @nome_do_cla'
     }
   }
 
@@ -170,6 +170,7 @@ module.exports = class ClanAdministration extends Context {
       const clanExists = await this.clanRepository.findByRole(clanRole.id)
       if (clanExists) {
         if (!lead.roles.cache.has(clanRole.id)) throw new NotClanLead(clanExists.name)
+        if (member.roles.has(config.roles.clanlead)) throw new CantRemoveLead()
         const hasRole = member.roles.cache.has(clanRole.id)
         if (hasRole) {
           await member.roles.remove(clanRole.id)
@@ -182,7 +183,7 @@ module.exports = class ClanAdministration extends Context {
         throw new ClanNotFound()
       }
     } else {
-      // TODO Wrong commands
+      return 'Você precisa marcar o clã e o membro para remover, ex: !remove @nome_do_membro @nome_do_cla'
     }
   }
 
