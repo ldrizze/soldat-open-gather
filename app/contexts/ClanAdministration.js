@@ -164,10 +164,12 @@ module.exports = class ClanAdministration extends Context {
   async _removeMember (event) {
     const member = event.mentions.members.first()
     const clanRole = event.mentions.roles.first()
+    const lead = event.member
 
     if (member && clanRole) {
       const clanExists = await this.clanRepository.findByRole(clanRole.id)
       if (clanExists) {
+        if (!lead.roles.cache.has(clanRole.id)) throw new NotClanLead(clanExists.name)
         const hasRole = member.roles.cache.has(clanRole.id)
         if (hasRole) {
           await member.roles.remove(clanRole.id)
