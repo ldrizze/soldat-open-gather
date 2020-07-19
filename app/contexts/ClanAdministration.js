@@ -170,7 +170,10 @@ module.exports = class ClanAdministration extends Context {
       const clanExists = await this.clanRepository.findByRole(clanRole.id)
       if (clanExists) {
         if (!lead.roles.cache.has(clanRole.id)) throw new NotClanLead(clanExists.name)
-        if (member.roles.has(config.roles.clanlead)) throw new CantRemoveLead()
+        if (
+          member.roles.has(config.roles.clanlead) &&
+          !lead.roles.has(config.roles.clanadmin)
+        ) throw new CantRemoveLead()
         const hasRole = member.roles.cache.has(clanRole.id)
         if (hasRole) {
           await member.roles.remove(clanRole.id)
