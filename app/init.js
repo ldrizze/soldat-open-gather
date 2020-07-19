@@ -17,6 +17,9 @@ BOT.on('ready', () => {
 BOT.on('message', async (event) => {
   // Validate if is a command
   if (event.content[0] !== Config.commandPrefix) {
+    if (event.channel.id === Config.channels.botcommands && event.author.id !== BOT.user.id) {
+      await event.delete().catch(e => { log.e(e) })
+    }
     return
   }
 
