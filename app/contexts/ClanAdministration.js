@@ -55,13 +55,7 @@ module.exports = class ClanAdministration extends Context {
       }
 
       // Validate command channel
-      if (command.commandName === 'add' || command.commandName === 'remove') {
-        if (this.channel !== config.channels.botcommands) throw new InvalidChannel()
-      }
-
-      if (command.commandName === 'addclan' || command.commandName === 'removeclan') {
-        if (this.channel !== config.channels.clanadmin) throw new InvalidChannel()
-      }
+      if (this.channel !== config.channels.clanadmin) throw new InvalidChannel()
 
       return command
     }
