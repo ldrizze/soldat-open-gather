@@ -5,13 +5,8 @@
   "main": "dist/init.js",
   "scripts": {
     "test": "mocha --exit",
-    "build:test": "npm run build && npm run test",
-    "build": "babel app -d dist",
     "start": "node app/init.js",
-    "debug": "nodemon --watch app --exec node --inspect app/init.js",
-    "build:dist": "babel app -d dist --source-maps=false",
-    "build:debug": "npm run build && node --inspect dist/init.js",
-    "serve": "nodemon --watch app --exec npm run build:debug"
+    "debug": "nodemon --watch app --exec node --inspect app/init.js"
   },
   "keywords": [
     "soldat",
@@ -27,9 +22,6 @@
     "uuid": "^8.2.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.10.5",
-    "@babel/core": "^7.10.5",
-    "@babel/preset-env": "^7.10.4",
     "chai": "^4.2.0",
     "dotenv": "^8.2.0",
     "eslint": "^7.4.0",
