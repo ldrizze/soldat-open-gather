@@ -55,7 +55,7 @@ module.exports = class ClanAdministration extends Context {
       }
 
       // Validate command channel
-      if (this.channel !== config.channels.clanadmin) throw new InvalidChannel()
+      if (this.channel !== config.channels.botcommands) throw new InvalidChannel()
 
       return command
     }

@@ -1,3 +1,5 @@
+const config = require('../config')
+
 class ResponseError extends Error {}
 exports.ResponseError = ResponseError
 
@@ -27,7 +29,7 @@ exports.NotClanMember = class NotClanMember extends ResponseError {
 
 exports.InvalidChannel = class InvalidChannel extends ResponseError {
   constructor () {
-    super('Canal inválido para este comando! Utilize o canal de texto #bot-comandos.')
+    super(`Canal inválido para este comando! Utilize o canal de texto <#${config.channels.botcommands}>`)
   }
 }
 
