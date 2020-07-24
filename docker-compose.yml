@@ -1,20 +1,22 @@
 version: '3'
 services:
-#  soldatbrbot:
-#    build: .
-#    volumes:
-#      - .:/app
-#    ports:
-#      - 3000:3000
-#    networks:
-#      - bot-network
+  bot:
+    build: .
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    networks:
+      - bot-network
 
   mongodb:
     image: mongo:latest
     ports:
       - "27017:27017"
     env_file:
-      - .docker.env
+      - .mongo.env
     volumes:
       - ./.data:/data/db
     networks:

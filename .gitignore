@@ -122,3 +122,4 @@ dist
 .data/
 .docker.env
 .test.env
+.mongo.env

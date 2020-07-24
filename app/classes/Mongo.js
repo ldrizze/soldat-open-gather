@@ -13,6 +13,7 @@ const log = new Logger('MONGO')
 
 // Connection URL
 const url = `mongodb://${user}:${password}@${host}:${port}/?authMechanism=${authMechanism}`
+log.i(`Connectingo to ${host}:${port}`)
 
 // Create a new MongoClient
 const client = new MongoClient(url, {
