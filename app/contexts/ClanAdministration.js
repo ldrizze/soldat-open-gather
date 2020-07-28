@@ -165,8 +165,8 @@ module.exports = class ClanAdministration extends Context {
       if (clanExists) {
         if (!lead.roles.cache.has(clanRole.id)) throw new NotClanLead(clanExists.name)
         if (
-          member.roles.has(config.roles.clanlead) &&
-          !lead.roles.has(config.roles.clanadmin)
+          member.roles.cache.has(config.roles.clanlead) &&
+          !lead.roles.cache.has(config.roles.clanadmin)
         ) throw new CantRemoveLead()
         const hasRole = member.roles.cache.has(clanRole.id)
         if (hasRole) {
