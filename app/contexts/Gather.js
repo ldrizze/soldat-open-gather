@@ -1,6 +1,7 @@
 const Context = require('../classes/Context')
 const Command = require('../classes/Command')
 const Logger = require('../classes/Logger')
+const GatherServers = require('../repositories/GatherServers')
 const GatherSessions = require('../repositories/GatherSessions')
 const config = require('../config')
 
@@ -13,7 +14,7 @@ module.exports = class Gather extends Context {
       new Command('remove', ['everyone'], this._remove.bind(this))
     ]
     this.log = new Logger('Gather')
-    this.gatherRepository = new GatherSessions()
+    this.gatherRepository = new GatherServers()
     this.params = message.split(' ')
   }
 
