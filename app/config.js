@@ -9,11 +9,24 @@ module.exports = {
     port: process.env.MONGO_PORT
   },
 
+  game: {
+    get maxplayers () {
+      return this.alpha + this.bravo
+    },
+    alpha: 3,
+    bravo: 3
+  },
+
   // TODO Refactor, send role map to DB
   roles: {
+    // DISCORD INTERFACE ROLES
     clanadmin: '715556952133992528',
     clanlead: '733597911811751966',
-    everyone: '238690452675493888'
+    gatheradmin: '741907054817574923',
+    everyone: '238690452675493888',
+
+    // WEB INTERFACE ROLES
+    server: '1'
   },
 
   // TODO Refactor, send channels map to DB
@@ -21,6 +34,7 @@ module.exports = {
     clanadmin: '733647075484631071',
     clancategory: '715295359827443903',
     voiceclancategory: '715200941963345920',
+    gather: '741907864624300076',
     botcommands: '733670794009378927'
   }
 }

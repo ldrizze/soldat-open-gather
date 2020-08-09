@@ -4,7 +4,7 @@ const Logger = require('../classes/Logger')
 const ClanRepository = require('../repositories/ClanRepository')
 const {
   AlreadyMember, ClanNotFound,
-  NotClanMember, InvalidChannel,
+  NotClanMember,
   Silence, NotClanLead,
   CantRemoveLead
 } = require('../classes/Errors')
@@ -55,9 +55,7 @@ module.exports = class ClanAdministration extends Context {
       }
 
       // Validate command channel
-      if (this.channel !== config.channels.botcommands) throw new InvalidChannel()
-
-      return command
+      if (this.channel === config.channels.botcommands) return command
     }
   }
 

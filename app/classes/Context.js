@@ -1,3 +1,5 @@
+const config = require('../config')
+
 module.exports = class Context {
   constructor (user, channel, message) {
     this.message = message
@@ -30,7 +32,21 @@ module.exports = class Context {
       return command.role.indexOf(role) !== -1
     } else if (typeof command.role === 'string') {
       return role === command.role
-    }
+    } else if (command.role === null) return true
     return false
+  }
+
+  /**
+   * Normalize roles from server to system
+   * @param {Array<number>} roles Roles from server
+   */
+  _normalizeRoles (roles) {
+    const userRoles = []
+    for (const configRole in config.roles) {
+      for (const role of roles) {
+        if (role === config.roles[configRole]) userRoles.push(configRole)
+      }
+    }
+    return userRoles
   }
 }
