@@ -38,8 +38,6 @@ BOT.on('message', async (event) => {
           log.w(`Command ${command.command} has no function`)
         }
         break
-      } else {
-        event.reply('Comando inválido')
       }
     } catch (error) {
       log.e(error.message)
