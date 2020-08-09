@@ -8,8 +8,6 @@ module.exports = class Gather extends Context {
   constructor (user, channel, message) {
     super(user, channel, message)
     this.commands = [
-      new Command('addserver', ['server'], this._addServer.bind(this)),
-      new Command('removeserver', ['server'], this._removeServer.bind(this)),
       new Command('breathe', ['server'], this._breathe.bind(this)),
       new Command('addctf', ['everyone'], this._addCTF.bind(this)),
       new Command('remove', ['everyone'], this._remove.bind(this))
@@ -31,11 +29,9 @@ module.exports = class Gather extends Context {
   }
 
   async _addServer () {
-    if (this.params.length === 4) {
-      const [, ip, port, name] = this.params
-      await this.gatherRepository.create(ip, port, name)
-      return `Servidor ${this.params[3]} ${ip}:${port} adicionado com sucesso`
-    }
+    const [, ip, port, name] = this.params
+    await this.gatherRepository.create(ip, port, name)
+    return `Servidor ${this.params[3]} ${ip}:${port} adicionado com sucesso`
   }
 
   async _removeServer () {
@@ -47,7 +43,7 @@ module.exports = class Gather extends Context {
   }
 
   async _breathe () {
-    if (this.params.length === 3) {
+    if (this.params.length === 4) {
       const [, ip, port] = this.params
       const session = await this.gatherRepository.find(ip, port)
       if (session && session.state === 'unknown') {
@@ -55,6 +51,8 @@ module.exports = class Gather extends Context {
           ip, port, 'waiting'
         )
         return `Servidor ${ip}:${port} unknown -> waiting`
+      } else if (!session) { // If server not created
+        return this._addServer()
       }
     }
   }

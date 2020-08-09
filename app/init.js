@@ -4,6 +4,7 @@ const Config = require('./config')
 const Logger = require('./classes/Logger')
 const Contexts = require('./contexts/contexts')
 const { ResponseError, Silence } = require('./classes/Errors')
+const express = require('express')
 
 const log = new Logger('BOT')
 const logWeb = new Logger('Web')
@@ -28,11 +29,13 @@ BOT.on('message', async (event) => {
     return
   }
 
+  // Grab roles
+  const roles = []
+  event.member.roles.cache.forEach(role => roles.push(role.id))
+
   for (const Context of Contexts) {
     const contextInstance = new Context(event.author.id, event.channel.id, event.content)
     try {
-      const roles = []
-      event.member.roles.cache.forEach(role => roles.push(role.id))
       const command = await contextInstance.validate(roles)
       if (command) {
         if (command.fn) {
@@ -49,7 +52,10 @@ BOT.on('message', async (event) => {
       log.e(error.message)
       log.d(error.stack)
       if (error instanceof Silence) return
-      if (error instanceof ResponseError) event.reply(error.message)
+      if (error instanceof ResponseError) {
+        event.reply(error.message)
+        break
+      }
     }
   }
 })
@@ -63,3 +69,22 @@ WEB INTERFACE
 */
 
 // TODO Web interface
+const app = express()
+
+app.get('/command', (req, res) => {
+  const commandString = req.query.command
+  const token = req.query.token
+
+  for (const Context of Contexts) {
+    const contextInstance = new Context(event.author.id, event.channel.id, event.content)
+    try {
+
+    } catch (error) {
+
+    }
+  }
+})
+
+app.listen(4040, () => {
+  logWeb.i('Web interface ready')
+})
