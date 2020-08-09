@@ -38,9 +38,12 @@ BOT.on('message', async (event) => {
           log.w(`Command ${command.command} has no function`)
         }
         break
+      } else {
+        log.d(`Command ${event.content} not found`)
       }
     } catch (error) {
       log.e(error.message)
+      log.d(e.stack)
       if (error instanceof Silence) return
       if (error instanceof ResponseError) event.reply(error.message)
     }
