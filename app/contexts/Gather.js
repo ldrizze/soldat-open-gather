@@ -44,15 +44,21 @@ module.exports = class Gather extends Context {
 
   async _breathe () {
     if (this.params.length === 4) {
-      const [, ip, port] = this.params
+      const [, ip, port, name] = this.params
       const session = await this.gatherRepository.find(ip, port)
-      if (session && session.state === 'offline') {
+      if (!session) { // If server was not created
+        return this._addServer()
+      } else if (session.state === 'offline') {
         await this.gatherRepository.changeState(
           ip, port, 'waiting'
         )
         return `Servidor ${ip}:${port} offline -> waiting`
-      } else if (!session) { // If server not created
-        return this._addServer()
+      } else if (session.name !== name) {
+        await this.gatherRepository.changeName(ip, port, name)
+        return `Servidor mudou nome ${session.name} -> ${name}`
+      } else {
+        await this.gatherRepository.hearthBeat(ip, port)
+        return `Servidor ${ip}:${port} heart beat`
       }
     }
   }

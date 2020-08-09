@@ -68,6 +68,14 @@ module.exports = class GatherSessions {
     return this._collection().updateOne({ ip, port }, { $set: { state, lastUpdate: moment().unix() } })
   }
 
+  async changeName (ip, port, name) {
+    return this._collection().updateOne({ ip, port }, { $set: { name, lastUpdate: moment().unix() } })
+  }
+
+  async hearthBeat (ip, port) {
+    return this._collection().updateOne({ ip, port }, { $set: { lastUpdate: moment().unix() } })
+  }
+
   _collection () {
     return this.db.collection('gatherSessions')
   }
