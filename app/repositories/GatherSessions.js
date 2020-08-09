@@ -7,9 +7,9 @@ module.exports = class GatherSessions {
     this.db = getDB()
   }
 
-  async create (ip, port, name) {
+  async create (ip, port, name, state = 'offline') {
     return this._collection().insertOne({
-      ip, port, name, state: 'unknown', lastUpdate: moment().unix(), players: []
+      ip, port, name, state: state, lastUpdate: moment().unix(), players: []
     })
   }
 

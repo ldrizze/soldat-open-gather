@@ -30,7 +30,7 @@ module.exports = class Gather extends Context {
 
   async _addServer () {
     const [, ip, port, name] = this.params
-    await this.gatherRepository.create(ip, port, name)
+    await this.gatherRepository.create(ip, port, name, 'waiting')
     return `Servidor ${this.params[3]} ${ip}:${port} adicionado com sucesso`
   }
 
@@ -46,11 +46,11 @@ module.exports = class Gather extends Context {
     if (this.params.length === 4) {
       const [, ip, port] = this.params
       const session = await this.gatherRepository.find(ip, port)
-      if (session && session.state === 'unknown') {
+      if (session && session.state === 'offline') {
         await this.gatherRepository.changeState(
           ip, port, 'waiting'
         )
-        return `Servidor ${ip}:${port} unknown -> waiting`
+        return `Servidor ${ip}:${port} offline -> waiting`
       } else if (!session) { // If server not created
         return this._addServer()
       }
