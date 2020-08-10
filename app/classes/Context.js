@@ -36,6 +36,13 @@ module.exports = class Context {
     return false
   }
 
+  _validateCommandRoles (command, roles) {
+    for (const role of roles) {
+      if (this._validateCommandRole(command, role)) return true
+    }
+    return false
+  }
+
   /**
    * Normalize roles from server to system
    * @param {Array<number>} roles Roles from server

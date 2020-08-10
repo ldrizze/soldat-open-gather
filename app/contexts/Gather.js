@@ -22,17 +22,20 @@ module.exports = class Gather extends Context {
 
   async validate (roles) {
     const command = this._validateCommands()
+    this.log.d('Validated command', command)
 
     if (command) {
       const normalizedRoles = this._normalizeRoles(roles)
-      if (this._validateCommandRole(command, normalizedRoles)) {
+      this.log.d('normalizedRoles', normalizedRoles)
+      if (this._validateCommandRoles(command, normalizedRoles)) {
         if (this.channel === config.channels.gather) return command
       }
     }
   }
 
   async _addServer () {
-    const [, ip, port, name] = this.params
+    let [, ip, port, ...name] = this.params
+    name = name.join(' ')
     await this.gatherRepository.create(ip, port, name, 'waiting')
     return `Servidor ${this.params[3]} ${ip}:${port} adicionado com sucesso`
   }
@@ -46,8 +49,9 @@ module.exports = class Gather extends Context {
   }
 
   async _breathe () {
-    if (this.params.length === 4) {
-      const [, ip, port, name] = this.params
+    if (this.params.length >= 4) {
+      let [, ip, port, ...name] = this.params
+      name = name.join(' ')
       const session = await this.gatherRepository.find(ip, port)
       if (!session) { // If server was not created
         return this._addServer()

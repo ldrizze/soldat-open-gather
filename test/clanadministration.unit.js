@@ -1,5 +1,5 @@
 /*eslint-disable*/
-
+/*
 require('dotenv').config()
 const { expect } = require('chai')
 const createTestUsers = require('../seeds/createTestUsers')
@@ -54,3 +54,5 @@ describe('ClanAdministration context unit tests', () => {
     return await createTestUsers.deleteClanAdmin()
   })
 })
+*/
+// Disabled until create a better interface

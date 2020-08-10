@@ -2,6 +2,7 @@ const mongodb = require('mongodb')
 const Logger = require('./Logger')
 const Config = require('../config')
 const assert = require('assert')
+const { rejects } = require('assert')
 
 const MongoClient = mongodb.MongoClient
 const user = encodeURIComponent(Config.database.username)
@@ -21,12 +22,16 @@ const client = new MongoClient(url, {
   useNewUrlParser: true
 })
 
-let db = {}
-client.connect(err => {
-  assert.equal(null, err)
-  log.i('Connected')
-  db = client.db('soldatbtbot')
+const connected = new Promise(resolve => {
+  client.connect(err => {
+    assert.equal(null, err)
+    log.i('Connected')
+    db = client.db('soldatbtbot')
+    resolve()
+  })
 })
+
+let db = {}
 
 function operation (fn) {
   if (typeof fn === 'function') fn(db)
@@ -39,3 +44,4 @@ function getDB () {
 
 exports.operation = operation
 exports.getDB = getDB
+exports.connected = connected

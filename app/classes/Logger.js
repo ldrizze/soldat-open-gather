@@ -5,24 +5,32 @@ module.exports = class Logger {
     this.tag = tag
   }
 
-  i (d) {
-    if (typeof d === 'object') d = JSON.stringify(d)
-    console.info(`[INFO][${this.tag}] ${d}`)
+  i () {
+    for (let d of arguments) {
+      if (typeof d === 'object') d = JSON.stringify(d)
+      console.info(`[INFO][${this.tag}] ${d}`)
+    }
   }
 
-  e (d) {
-    if (typeof d === 'object') d = JSON.stringify(d)
-    console.error(`[ERROR][${this.tag}] ${d}`)
+  e () {
+    for (let d of arguments) {
+      if (typeof d === 'object') d = JSON.stringify(d)
+      console.error(`[ERROR][${this.tag}] ${d}`)
+    }
   }
 
-  w (d) {
-    if (typeof d === 'object') d = JSON.stringify(d)
-    console.error(`[WARNING][${this.tag}] ${d}`)
+  w () {
+    for (let d of arguments) {
+      if (typeof d === 'object') d = JSON.stringify(d)
+      console.error(`[WARNING][${this.tag}] ${d}`)
+    }
   }
 
-  d (d) {
+  d () {
     if (!Config.debug) return
-    if (typeof d === 'object') d = JSON.stringify(d)
-    console.info(`[DEBUG][${this.tag}] ${d}`)
+    for (let d of arguments) {
+      if (typeof d === 'object') d = JSON.stringify(d)
+      console.info(`[DEBUG][${this.tag}] ${d}`)
+    }
   }
 }

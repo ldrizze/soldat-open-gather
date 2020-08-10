@@ -1,7 +1,7 @@
 const { getDB } = require('../classes/Mongo')
 const moment = require('moment')
 const config = require('../config')
-const uuid = require('uuid')
+const uuid = require('uuid').v4
 
 module.exports = class GatherServers {
   constructor () {
@@ -21,7 +21,7 @@ module.exports = class GatherServers {
   }
 
   async find (ip, port) {
-    const session = this._collection().find({ ip, port }).limit(1).toArray()
+    const session = await this._collection().find({ ip, port }).limit(1).toArray()
 
     if (session.length > 0) return session[0]
   }
