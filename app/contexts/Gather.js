@@ -94,8 +94,12 @@ module.exports = class Gather extends Context {
     }
   }
 
-  _remove (event) {
-
+  async _remove () {
+    const session = await this.gatherRepository.findPlayerSession(this.user)
+    if (session && session.state === 'waiting') {
+      await this.gatherRepository.removePlayer(session.ip, session.port, this.user)
+      return 'Removido com sucesso.'
+    }
   }
 
   // Help methods

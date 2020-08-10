@@ -88,6 +88,14 @@ module.exports = class GatherServers {
     })
   }
 
+  async findPlayerSession (playerId) {
+    const session = await this._collection().find({
+      players: { $in: [playerId] }
+    }).toArray()
+
+    if (session.length > 0) return session[0]
+  }
+
   _collection () {
     return this.db.collection('gatherServers')
   }
