@@ -8,9 +8,9 @@ module.exports = class GatherServers {
     this.db = getDB()
   }
 
-  async create (ip, port, name, state = 'offline') {
+  async create (ip, port, name, type = 'ctf', state = 'offline') {
     return this._collection().insertOne({
-      ip, port, name, state: state, lastUpdate: moment().unix(), players: [], sessionId: ''
+      ip, port, name, state, type, lastUpdate: moment().unix(), players: [], sessionId: ''
     })
   }
 
@@ -81,7 +81,7 @@ module.exports = class GatherServers {
     const sessionId = uuid()
     return this._collection().updateOne({ ip, port }, {
       $set: {
-        state: 'running',
+        state: 'waiting_server',
         lastUpdate: moment().unix(),
         sessionId
       }

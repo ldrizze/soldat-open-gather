@@ -33,11 +33,11 @@ module.exports = class Gather extends Context {
     }
   }
 
-  async _addServer () {
+  async _addServer (type) {
     let [, ip, port, ...name] = this.params
     name = name.join(' ')
-    await this.gatherRepository.create(ip, port, name, 'waiting')
-    return `Servidor ${this.params[3]} ${ip}:${port} adicionado com sucesso`
+    const result = this.gatherRepository.create(ip, port, name, type, 'waiting')
+    return result.ops[0]
   }
 
   async _removeServer () {
@@ -50,23 +50,21 @@ module.exports = class Gather extends Context {
 
   async _breathe () {
     if (this.params.length >= 4) {
-      let [, ip, port, ...name] = this.params
+      let [, ip, port, type, ...name] = this.params
       name = name.join(' ')
-      const session = await this.gatherRepository.find(ip, port)
+      let session = await this.gatherRepository.find(ip, port)
       if (!session) { // If server was not created
-        return this._addServer()
+        session = await this._addServer(type)
       } else if (session.state === 'offline') {
         await this.gatherRepository.changeState(
           ip, port, 'waiting'
         )
-        return `Servidor ${ip}:${port} offline -> waiting`
       } else if (session.name !== name) {
         await this.gatherRepository.changeName(ip, port, name)
-        return `Servidor mudou nome ${session.name} -> ${name}`
       } else {
         await this.gatherRepository.hearthBeat(ip, port)
-        return `Servidor ${ip}:${port} heart beat`
       }
+      return session.state
     }
   }
 

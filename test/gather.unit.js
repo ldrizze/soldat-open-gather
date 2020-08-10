@@ -11,7 +11,7 @@ describe('ClanAdministration context unit tests', () => {
   })
 
   it('!breathe', async () => {
-    const GatherInstance = new Gather(99, config.channels.gather, '!breathe 127.0.0.1 27015 Gather Test Server #1')
+    const GatherInstance = new Gather(99, config.channels.gather, '!breathe 127.0.0.1 27015 ctf Gather Test Server #1')
     const command = await GatherInstance.validate([config.roles.server])
     expect(command).be.an('object')
     const result = await command.fn()
