@@ -10,11 +10,13 @@ module.exports = class Gather extends Context {
     super(user, channel, message)
     this.commands = [
       new Command('breathe', ['server'], this._breathe.bind(this)),
+      new Command('genservertoken', ['gatheradmin']),
       new Command('addctf', ['everyone'], this._addCTF.bind(this)),
       new Command('remove', ['everyone'], this._remove.bind(this))
     ]
     this.log = new Logger('Gather')
     this.gatherRepository = new GatherServers()
+    this.gatherSessionsRepository = new GatherSessions()
     this.params = message.split(' ')
   }
 
@@ -68,12 +70,42 @@ module.exports = class Gather extends Context {
     const availableSessions = await this.gatherRepository.available()
     if (availableSessions.length > 0) {
       const session = availableSessions[0]
+      session.players.push(this.user)
       await this.gatherRepository.addPlayer(session.ip, session.port, this.user)
-      return `Adicionado a fila do server ${session.name}`
+
+      if (session.players.length === config.game.maxplayers) {
+        // TODO start the game
+        const sessionId = await this.gatherRepository.startGame(session.ip, session.port)
+        const players = session.players.slice()
+        this._shuffleTeams(players)
+        await this.gatherSessionsRepository.create(sessionId, players.slice(0, 3), players.slice(-3))
+        return 'O jogo já está pronto, estamos preparando o servidor.' +
+        'Um invite para jogar será enviado via mensagem direta. ' +
+        (
+          players.reduce((previous, current) =>
+            ((typeof previous === 'string' ? previous : `<#${previous}> `) + `<#${current}> `)
+          )
+        )
+      } else {
+        return `Adicionado a fila do server ${session.name}`
+      }
+    } else {
+      return 'Não há nenhum servidor com vaga no momento. Digite !info para obter a lista de servidores'
     }
   }
 
   _remove (event) {
 
+  }
+
+  // Help methods
+  _shuffleTeams (players) {
+    for (let i = players.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      const x = players[i]
+      players[i] = players[j]
+      players[j] = x
+    }
+    return players
   }
 }

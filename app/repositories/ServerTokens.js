@@ -1,6 +1,6 @@
 const { getDB } = require('../classes/Mongo')
 
-module.exports = class Tokens {
+module.exports = class ServerTokens {
   constructor () {
     this.db = getDB()
   }

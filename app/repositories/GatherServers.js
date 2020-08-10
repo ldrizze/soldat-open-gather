@@ -1,6 +1,7 @@
 const { getDB } = require('../classes/Mongo')
 const moment = require('moment')
 const config = require('../config')
+const uuid = require('uuid')
 
 module.exports = class GatherServers {
   constructor () {
@@ -9,7 +10,7 @@ module.exports = class GatherServers {
 
   async create (ip, port, name, state = 'offline') {
     return this._collection().insertOne({
-      ip, port, name, state: state, lastUpdate: moment().unix(), players: [], session: ''
+      ip, port, name, state: state, lastUpdate: moment().unix(), players: [], sessionId: ''
     })
   }
 
@@ -74,6 +75,17 @@ module.exports = class GatherServers {
 
   async hearthBeat (ip, port) {
     return this._collection().updateOne({ ip, port }, { $set: { lastUpdate: moment().unix() } })
+  }
+
+  async startGame (ip, port) {
+    const sessionId = uuid()
+    return this._collection().updateOne({ ip, port }, {
+      $set: {
+        state: 'running',
+        lastUpdate: moment().unix(),
+        sessionId
+      }
+    })
   }
 
   _collection () {
