@@ -1,7 +1,7 @@
 /*eslint-disable*/
 require('dotenv').config()
 const { expect } = require('chai')
-const { connected } = require('../app/classes/Mongo')
+const { connected, operation } = require('../app/classes/Mongo')
 const Gather = require('../app/contexts/Gather')
 const config = require('../app/config')
 
@@ -55,5 +55,28 @@ describe('ClanAdministration context unit tests', () => {
       if (i < 6) expect(result).contains('Adicionado')
       else expect(result).contains('invite')
     }
+  })
+
+  it('!genservertoken', async  () => {
+    const GatherInstance = new Gather(99, config.channels.gather, '!genservertoken')
+    const command = await GatherInstance.validate([config.roles.gatheradmin])
+    expect(command).be.an('object')
+    const result = await command.fn()
+    expect(result).be.match(/((\w|\n){8})-((\w|\n){4})-((\w|\n){4})-((\w|\n){4})-((\w|\n){12})$/g)
+  })
+
+  after(done => {
+    operation(db => {
+      db.collection('gatherServers').remove()
+    })
+
+    operation(db => {
+      db.collection('gatherSessions').remove()
+    })
+
+    operation(db => {
+      db.collection('serverTokens').remove()
+      done()
+    })
   })
 })

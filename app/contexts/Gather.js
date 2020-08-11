@@ -3,6 +3,8 @@ const Command = require('../classes/Command')
 const Logger = require('../classes/Logger')
 const GatherServers = require('../repositories/GatherServers')
 const GatherSessions = require('../repositories/GatherSessions')
+const ServerTokens = require('../repositories/ServerTokens')
+const { MD } = require('../classes/Responses')
 const config = require('../config')
 
 module.exports = class Gather extends Context {
@@ -10,13 +12,14 @@ module.exports = class Gather extends Context {
     super(user, channel, message)
     this.commands = [
       new Command('breathe', ['server'], this._breathe.bind(this)),
-      new Command('genservertoken', ['gatheradmin']),
+      new Command('genservertoken', ['gatheradmin'], this._genServerToken.bind(this)),
       new Command('addctf', ['everyone'], this._addCTF.bind(this)),
       new Command('remove', ['everyone'], this._remove.bind(this))
     ]
     this.log = new Logger('Gather')
     this.gatherRepository = new GatherServers()
     this.gatherSessionsRepository = new GatherSessions()
+    this.serverTokensRepository = new ServerTokens()
     this.params = message.split(' ')
   }
 
@@ -104,6 +107,11 @@ module.exports = class Gather extends Context {
     } else {
       return 'Você não está em uma fila de espera.'
     }
+  }
+
+  async _genServerToken () {
+    const token = await this.serverTokensRepository.generate('server')
+    return new MD(token)
   }
 
   // Help methods

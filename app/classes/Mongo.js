@@ -2,7 +2,6 @@ const mongodb = require('mongodb')
 const Logger = require('./Logger')
 const Config = require('../config')
 const assert = require('assert')
-const { rejects } = require('assert')
 
 const MongoClient = mongodb.MongoClient
 const user = encodeURIComponent(Config.database.username)
