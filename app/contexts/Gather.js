@@ -36,7 +36,7 @@ module.exports = class Gather extends Context {
   async _addServer (type) {
     let [, ip, port, ...name] = this.params
     name = name.join(' ')
-    const result = this.gatherRepository.create(ip, port, name, type, 'waiting')
+    const result = await this.gatherRepository.create(ip, port, name, type, 'waiting')
     return result.ops[0]
   }
 
@@ -101,6 +101,8 @@ module.exports = class Gather extends Context {
     if (session && session.state === 'waiting') {
       await this.gatherRepository.removePlayer(session.ip, session.port, this.user)
       return 'Removido com sucesso.'
+    } else {
+      return 'Você não está em uma fila de espera.'
     }
   }
 

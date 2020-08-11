@@ -36,15 +36,15 @@ describe('ClanAdministration context unit tests', () => {
     expect(result).contains('Removido')
   })
 
-  it('create a second server', async () => {
-    const GatherInstance = new Gather(99, config.channels.gather, '!breathe 127.0.0.1 27016 Gather Test Server #2')
+  it('!breathe a second server', async () => {
+    const GatherInstance = new Gather(99, config.channels.gather, '!breathe 127.0.0.1 27016 ctf Gather Test Server #2')
     const command = await GatherInstance.validate([config.roles.server])
     expect(command).be.an('object')
     const result = await command.fn()
     expect(result).be.an('string')
   })
 
-  it('add six persons and start session', async () => {
+  it('!addctf six persons and start session', async () => {
     for(let i = 1; i <= 6; i++) {
       const GatherInstance = new Gather(99 + i, config.channels.gather, '!addctf')
       const command = await GatherInstance.validate([config.roles.everyone])
