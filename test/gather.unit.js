@@ -5,7 +5,7 @@ const { connected, operation } = require('../app/classes/Mongo')
 const Gather = require('../app/contexts/Gather')
 const config = require('../app/config')
 
-describe('ClanAdministration context unit tests', () => {
+describe('Gahter context unit tests', async () => {
   before(done => {
     connected.then(done)
   })
@@ -27,8 +27,8 @@ describe('ClanAdministration context unit tests', () => {
     expect(result).contains('Adicionado')
   })
 
-  it('!remove', async () => {
-    const GatherInstance = new Gather(99, config.channels.gather, '!remove')
+  it('!del', async () => {
+    const GatherInstance = new Gather(99, config.channels.gather, '!del')
     const command = await GatherInstance.validate([config.roles.everyone])
     expect(command).be.an('object')
     const result = await command.fn()
@@ -67,15 +67,15 @@ describe('ClanAdministration context unit tests', () => {
 
   after(done => {
     operation(db => {
-      db.collection('gatherServers').remove()
+      db.collection('gatherServers').deleteMany()
     })
 
     operation(db => {
-      db.collection('gatherSessions').remove()
+      db.collection('gatherSessions').deleteMany()
     })
 
     operation(db => {
-      db.collection('serverTokens').remove()
+      db.collection('serverTokens').deleteMany()
       done()
     })
   })

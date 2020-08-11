@@ -14,7 +14,7 @@ module.exports = class Gather extends Context {
       new Command('breathe', ['server'], this._breathe.bind(this)),
       new Command('genservertoken', ['gatheradmin'], this._genServerToken.bind(this)),
       new Command('addctf', ['everyone'], this._addCTF.bind(this)),
-      new Command('remove', ['everyone'], this._remove.bind(this))
+      new Command('del', ['everyone'], this._remove.bind(this))
     ]
     this.log = new Logger('Gather')
     this.gatherRepository = new GatherServers()
