@@ -62,7 +62,7 @@ describe('ClanAdministration context unit tests', () => {
     const command = await GatherInstance.validate([config.roles.gatheradmin])
     expect(command).be.an('object')
     const result = await command.fn()
-    expect(result).be.match(/((\w|\n){8})-((\w|\n){4})-((\w|\n){4})-((\w|\n){4})-((\w|\n){12})$/g)
+    expect(result).to.match(/((\w|\n){8})-((\w|\n){4})-((\w|\n){4})-((\w|\n){4})-((\w|\n){12})$/g)
   })
 
   after(done => {
