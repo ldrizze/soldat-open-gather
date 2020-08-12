@@ -21,14 +21,18 @@ BOT INTERFACE
 */
 
 BOT.on('ready', () => {
-  log.i('Bot ready')
+  log.i('Bot interface ready')
   botReady = true
 })
 
 BOT.on('message', async (event) => {
   // Validate if is a command
   if (event.content[0] !== Config.commandPrefix) {
-    if (event.channel.id === Config.channels.botcommands && event.author.id !== BOT.user.id) {
+    if (
+      event.channel.id === Config.channels.botcommands &&
+      event.author.id !== BOT.user.id &&
+      process.env.DISCORD_BOT_DELETE_NON_COMMANDS === 'true'
+    ) {
       await event.delete().catch(e => { log.e(e) })
     }
     return
@@ -44,15 +48,14 @@ BOT.on('message', async (event) => {
       const command = await contextInstance.validate(roles)
       if (command) {
         if (command.fn) {
+          log.d('Executing command', command)
           const result = await command.fn(event)
           if (result instanceof MD) event.author.send(result)
           else if (typeof result === 'string') event.reply(result)
         } else {
-          log.d(`Command ${command.command} has no function in context ${Context.constructor.name}`)
+          log.d(`Command ${command.command} has no function in context`)
         }
-        break
-      } else {
-        log.d(`Command ${event.content} not found in context ${Context.constructor.name}`)
+        return
       }
     } catch (error) {
       log.e(error.message)
@@ -105,6 +108,6 @@ app.get('/command', async (req, res) => {
   }
 })
 
-app.listen(process.env.WEBPORT || process.env.PORT || 83462, () => {
+app.listen(process.env.WEBPORT || process.env.PORT || 4040, () => {
   logWeb.i('Web interface ready')
 })
