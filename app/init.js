@@ -11,6 +11,7 @@ const express = require('express')
 const log = new Logger('BOT')
 const logWeb = new Logger('Web')
 const BOT = new Discord.Client()
+let botReady = false
 const serverTokensRepository = new ServerTokens()
 
 /*
@@ -21,6 +22,7 @@ BOT INTERFACE
 
 BOT.on('ready', () => {
   log.i('Bot ready')
+  botReady = true
 })
 
 BOT.on('message', async (event) => {
@@ -90,6 +92,7 @@ app.get('/command', async (req, res) => {
     try {
       const command = await contextInstance.validate([serverToken.role])
       if (command) {
+        if (botReady) contextInstance.setBotClient(BOT)
         if (command.fn) {
           const result = await command.fn()
           if (result) res.send(result)
@@ -102,6 +105,6 @@ app.get('/command', async (req, res) => {
   }
 })
 
-app.listen(83462, () => {
+app.listen(process.env.WEBPORT || process.env.PORT || 83462, () => {
   logWeb.i('Web interface ready')
 })

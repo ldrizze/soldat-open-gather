@@ -7,6 +7,10 @@ module.exports = class Context {
     this.channel = channel
   }
 
+  setBotClient (client) {
+    this.botClient = client
+  }
+
   async validate () {
     const command = this._validateCommands()
     if (command) {

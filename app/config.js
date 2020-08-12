@@ -17,6 +17,8 @@ module.exports = {
     bravo: 3
   },
 
+  discordServerId: '280147857573675008',
+
   // TODO Refactor, send role map to DB
   roles: {
     // DISCORD INTERFACE ROLES

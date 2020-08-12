@@ -26,6 +26,10 @@ module.exports = class GatherServers {
     if (session.length > 0) return session[0]
   }
 
+  async get (filter) {
+    return this._collection().find(filter).toArray()
+  }
+
   async waiting () {
     return this._collection().find({ state: 'waiting' }).toArray()
   }

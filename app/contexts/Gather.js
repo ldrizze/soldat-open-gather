@@ -4,6 +4,7 @@ const Logger = require('../classes/Logger')
 const GatherServers = require('../repositories/GatherServers')
 const GatherSessions = require('../repositories/GatherSessions')
 const ServerTokens = require('../repositories/ServerTokens')
+const Users = require('../repositories/Users')
 const { MD } = require('../classes/Responses')
 const config = require('../config')
 
@@ -14,12 +15,17 @@ module.exports = class Gather extends Context {
       new Command('breathe', ['server'], this._breathe.bind(this)),
       new Command('genservertoken', ['gatheradmin'], this._genServerToken.bind(this)),
       new Command('addctf', ['everyone'], this._addCTF.bind(this)),
-      new Command('del', ['everyone'], this._remove.bind(this))
+      new Command('del', ['everyone'], this._remove.bind(this)),
+      new Command('round', ['server'], this._round.bind(this)),
+      new Command('playerauth', ['server'], this._playerauth.bind(this)),
+      new Command('checkplayerauth', ['server'], this._checkPlayerAuth.bind(this)),
+      new Command('serverready', ['server'], this._serverReady.bind(this))
     ]
     this.log = new Logger('Gather')
     this.gatherRepository = new GatherServers()
     this.gatherSessionsRepository = new GatherSessions()
     this.serverTokensRepository = new ServerTokens()
+    this.usersRepository = new Users()
     this.params = message.split(' ')
   }
 
@@ -112,6 +118,90 @@ module.exports = class Gather extends Context {
   async _genServerToken () {
     const token = await this.serverTokensRepository.generate('server')
     return new MD(token)
+  }
+
+  async _playerauth () {
+    const [, ip, port, pin, steamId] = this.params
+
+    // check if server exists
+    const server = await this.gatherRepository.find(ip, port)
+    if (server && server.sessionId) {
+      const users = await this.usersRepository.get({
+        userId: { $in: server.players },
+        pin
+      })
+      if (users && users.length === 1) {
+        const user = users[0]
+
+        return String(+(await this.usersRepository.authenticate(user.userId, pin, steamId)))
+      }
+    }
+
+    return '0'
+  }
+
+  async _checkPlayerAuth () {
+    const [, steamId] = this.params
+    const user = await this.usersRepository.findBySteamId(steamId)
+    return user ? '1' : '0'
+  }
+
+  async _serverReady () {
+    const [, ip, port, password] = this.params
+    if (!this.botClient) return
+    const guildClient = this.botClient.guilds.cache.get(config.discordServerId)
+    if (!guildClient) return
+    const server = await this.gatherRepository.find(ip, port)
+    let pinIndex = 0
+    let pin = null
+    if (server) {
+      for (const userId of server.players) {
+        const user = await this.usersRepository.find(userId)
+        if (user) { // user exists
+          if (!user.auth) { // not auth, need generate pin
+            pin = this._generatePin(pinIndex++)
+            await this.usersRepository.newPin(userId, pin)
+          }
+        } else { // create user
+          pin = this._generatePin(pinIndex++)
+          await this.usersRepository.create(userId, pin)
+        }
+
+        let message = `Server: soldat://${ip}:${port}/${password}`
+        if (pin) message += `\n Pin: ${pin}`
+        const userClient = guildClient.members.cache.get(userId)
+        if (userClient) userClient.send(message)
+      }
+    }
+  }
+
+  async _round () {
+    const [, ip, port, map, alphaScore, bravoScore, ...playerScores] = this.params
+    const server = await this.gatherRepository.find(ip, port)
+    if (server && server.sessionId) {
+      const session = await this.gatherSessionsRepository.find(server.sessionId)
+      const team = session.rounds === 0 ? 'alpha' : 'bravo'
+      session.rounds++
+      if (session) {
+        playerScores.map(score => {
+          const [k, d, steamId] = score.split('|')
+          return { k, d, steamId }
+        })
+      }
+
+      await this.gatherSessionsRepository.insertScores(
+        server.sessionId,
+        team,
+        map,
+        { alpha: alphaScore, bravo: bravoScore },
+        session.rounds,
+        playerScores
+      )
+    }
+  }
+
+  _generatePin (plus) {
+    return plus + Math.floor(Math.random() * 99)
   }
 
   // Help methods
