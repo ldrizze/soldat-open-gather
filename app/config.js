@@ -17,15 +17,15 @@ module.exports = {
     bravo: 3
   },
 
-  discordServerId: '280147857573675008',
+  discordServerId: process.env.DISCORD_SERVER_ID,
 
   // TODO Refactor, send role map to DB
   roles: {
     // DISCORD INTERFACE ROLES
-    clanadmin: '715556952133992528',
-    clanlead: '733597911811751966',
-    gatheradmin: '741907054817574923',
-    everyone: '238690452675493888',
+    clanadmin: process.env.ROLE_CLANADMIN,
+    clanlead: process.env.ROLE_CLANLEAD,
+    gatheradmin: process.env.ROLE_GATHERADMIN,
+    everyone: process.env.ROLE_EVERYONE,
 
     // WEB INTERFACE ROLES
     server: '1'
@@ -33,10 +33,10 @@ module.exports = {
 
   // TODO Refactor, send channels map to DB
   channels: {
-    clanadmin: '733647075484631071',
-    clancategory: '715295359827443903',
-    voiceclancategory: '715200941963345920',
-    gather: '741907864624300076',
-    botcommands: '733670794009378927'
+    clanadmin: process.env.CHANNEL_CLANADMIN,
+    clancategory: process.env.CHANNEL_CLANCATEGORY,
+    voiceclancategory: process.env.CHANNEL_VOICECLANCATEGORY,
+    gather: process.env.CHANNEL_GATHER,
+    botcommands: process.env.CHANNEL_BOTCOMMANDS
   }
 }
