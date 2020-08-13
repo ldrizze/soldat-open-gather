@@ -13,8 +13,9 @@ module.exports = {
     get maxplayers () {
       return this.alpha + this.bravo
     },
-    alpha: 3,
-    bravo: 3
+    alpha: 1,
+    bravo: 1,
+    rounds: 2
   },
 
   discordServerId: process.env.DISCORD_SERVER_ID,

@@ -81,6 +81,8 @@ module.exports = class Gather extends Context {
     const availableSessions = await this.gatherRepository.available()
     if (availableSessions.length > 0) {
       const session = availableSessions[0]
+      const isPlayerInSession = await this.gatherRepository.findPlayerSession(this.user)
+      if (isPlayerInSession) return 'Você já está em uma fila.'
       session.players.push(this.user)
       await this.gatherRepository.addPlayer(session.ip, session.port, this.user)
 
@@ -89,14 +91,21 @@ module.exports = class Gather extends Context {
         const sessionId = await this.gatherRepository.startGame(session.ip, session.port)
         const players = session.players.slice()
         this._shuffleTeams(players)
-        await this.gatherSessionsRepository.create(sessionId, players.slice(0, 3), players.slice(-3))
-        return 'O jogo já está pronto, estamos preparando o servidor.' +
-        'Um invite para jogar será enviado via mensagem direta. ' +
-        (
-          players.reduce((previous, current) =>
-            ((typeof previous === 'string' ? previous : `<#${previous}> `) + `<#${current}> `)
-          )
+        const alpha = players.slice(0, config.game.alpha)
+        const bravo = players.slice(-1 * config.game.bravo)
+        await this.gatherSessionsRepository.create(
+          sessionId, alpha, bravo
         )
+        return 'O jogo já está pronto, estamos preparando o servidor. ' +
+        'Um invite para jogar será enviado via mensagem direta.\n' +
+        'Time Alpha: [' +
+        (
+          alpha.map(value => `<@${value}>`).join(',')
+        ) + ']\n' +
+        'Time Bravo: [' +
+        (
+          bravo.map(value => `<@${value}>`).join(',')
+        ) + ']'
       } else {
         return `Adicionado a fila do server ${session.name}`
       }
@@ -116,7 +125,7 @@ module.exports = class Gather extends Context {
   }
 
   async _genServerToken () {
-    const token = await this.serverTokensRepository.generate('server')
+    const token = await this.serverTokensRepository.generate(config.roles.server)
     return new MD(token)
   }
 
@@ -152,18 +161,18 @@ module.exports = class Gather extends Context {
     const guildClient = this.botClient.guilds.cache.get(config.discordServerId)
     if (!guildClient) return
     const server = await this.gatherRepository.find(ip, port)
-    let pinIndex = 0
+    let pinIndex = 1
     let pin = null
     if (server) {
       for (const userId of server.players) {
         const user = await this.usersRepository.find(userId)
         if (user) { // user exists
           if (!user.auth) { // not auth, need generate pin
-            pin = this._generatePin(pinIndex++)
+            pin = this._generatePin(100 * pinIndex++)
             await this.usersRepository.newPin(userId, pin)
           }
         } else { // create user
-          pin = this._generatePin(pinIndex++)
+          pin = this._generatePin(100 * pinIndex++)
           await this.usersRepository.create(userId, pin)
         }
 
@@ -172,31 +181,60 @@ module.exports = class Gather extends Context {
         const userClient = guildClient.members.cache.get(userId)
         if (userClient) userClient.send(message)
       }
+      await this.gatherRepository.changeState(ip, port, 'running')
     }
   }
 
   async _round () {
-    const [, ip, port, map, alphaScore, bravoScore, ...playerScores] = this.params
+    const [, ip, port, map, alphaScore, bravoScore, ..._playerScores] = this.params
     const server = await this.gatherRepository.find(ip, port)
     if (server && server.sessionId) {
+      const players = server.players.slice()
       const session = await this.gatherSessionsRepository.find(server.sessionId)
       const team = session.rounds === 0 ? 'alpha' : 'bravo'
       session.rounds++
       if (session) {
-        playerScores.map(score => {
-          const [k, d, steamId] = score.split('|')
+        const playerScores = _playerScores.map(score => {
+          const [steamId, k, d] = score.split('|')
           return { k, d, steamId }
         })
+
+        await this.gatherSessionsRepository.insertScores(
+          server.sessionId,
+          team,
+          map,
+          { alpha: alphaScore, bravo: bravoScore },
+          session.rounds,
+          playerScores
+        )
+
+        if (session.rounds === config.game.rounds) {
+          // Tiebreak or endGame
+          session.ended = true
+          await this.gatherRepository.endGame(ip, port)
+        } else if (session.rounds === config.game.rounds + 1) {
+          // TODO Tiebreak round
+        }
+
+        if (session.ended) { // Send BOT endgame message
+          if (this.botClient) {
+            if (!this.botClient) return
+            const guildClient = this.botClient.guilds.cache.get(config.discordServerId)
+            if (!guildClient) return
+            const scores = this._compondScores(session)
+            guildClient.channels.cache.get(config.channels.gather).send(
+              `Jogo do servidor ${server.name}\n` +
+              `Alpha Score: ${scores[0]}\n` +
+              `Bravo Score: ${scores[1]}\n` +
+              (
+                players.map(value => `<@${value}> `).join(',')
+              ) + ' GG!'
+            )
+          }
+        }
       }
 
-      await this.gatherSessionsRepository.insertScores(
-        server.sessionId,
-        team,
-        map,
-        { alpha: alphaScore, bravo: bravoScore },
-        session.rounds,
-        playerScores
-      )
+      return '1'
     }
   }
 
@@ -213,5 +251,17 @@ module.exports = class Gather extends Context {
       players[j] = x
     }
     return players
+  }
+
+  _compondScores (session) {
+    const alpha =
+      (+session.maps.alpha.score.alpha) +
+      (+session.maps.bravo.score.alpha) +
+      (+session.maps.tie.score.alpha)
+    const bravo =
+      (+session.maps.alpha.score.bravo) +
+      (+session.maps.bravo.score.bravo) +
+      (+session.maps.tie.score.bravo)
+    return [alpha, bravo]
   }
 }

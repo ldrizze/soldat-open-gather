@@ -93,6 +93,17 @@ module.exports = class GatherServers {
     return sessionId
   }
 
+  async endGame (ip, port) {
+    await this._collection().updateOne({ ip, port }, {
+      $set: {
+        state: 'waiting',
+        lastUpdate: moment().unix(),
+        sessionId: '',
+        players: []
+      }
+    })
+  }
+
   async findPlayerSession (playerId) {
     const session = await this._collection().find({
       players: { $in: [playerId] }
