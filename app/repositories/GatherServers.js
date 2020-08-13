@@ -16,7 +16,15 @@ module.exports = class GatherServers {
 
   async create (ip, port, name, type = 'ctf', state = 'offline') {
     return this._collection().insertOne({
-      ip, port, name, state, type, lastUpdate: moment().unix(), players: [], sessionId: ''
+      ip,
+      port,
+      name,
+      state,
+      type,
+      lastUpdate: moment().unix(),
+      players: [],
+      sessionId: '',
+      password: '123456'
     })
   }
 
@@ -67,6 +75,10 @@ module.exports = class GatherServers {
 
   async addPlayer (ip, port, playerId) {
     return this._collection().updateOne({ ip, port }, { $addToSet: { players: playerId } })
+  }
+
+  async changePassword (ip, port, password) {
+    return this._collection().updateOne({ ip, port }, { $set: { password } })
   }
 
   async removePlayer (ip, port, playerId) {

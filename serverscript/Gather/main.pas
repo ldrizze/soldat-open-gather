@@ -4,6 +4,7 @@ var
   mainServerIp: String;
   gamePrepared: Boolean;
   inTieBreak: Boolean;
+  status: String;
 
 function sendCommand (command: String): String;
 begin
@@ -75,7 +76,6 @@ begin
 end;
 
 procedure breathe ();
-var status: String;
 begin
   status := sendCommand(
     '!breathe ' + mainServerIp + ' ' + IntToStr(Game.ServerPort) + ' ' + parseGameStyle() + ' ' + Game.ServerName
@@ -101,9 +101,10 @@ procedure  beforeMapChange(next: String);
   var Score: Byte;
 begin
   Score := Game.Teams[1].Score + Game.Teams[2].Score
-  if (Game.ScoreLimit = Score) or (Game.TimeLeft = 0) then begin
-    sendMapStatistics();
-  end;
+  if
+    ((Game.ScoreLimit = Score) or (Game.TimeLeft = 0)) and
+    not (status = 'waiting') then
+      sendMapStatistics();
 end;
 
 function  playerAuth (Player: TActivePlayer; pin: String): String;
@@ -154,6 +155,7 @@ end;
 begin
   inTieBreak := False;
   gamePrepared := False;
+  status := 'waiting';
   serverToken := ReadINI(Script.Dir + 'config.ini', 'Server', 'token', '-');
   serverURL   := ReadINI(Script.Dir + 'config.ini', 'Server', 'url', '-');
   mainServerIp   := ReadINI(Script.Dir + 'config.ini', 'Server', 'ip', '-');

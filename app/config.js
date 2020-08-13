@@ -13,8 +13,8 @@ module.exports = {
     get maxplayers () {
       return this.alpha + this.bravo
     },
-    alpha: 1,
-    bravo: 1,
+    alpha: 3,
+    bravo: 3,
     rounds: 2
   },
 

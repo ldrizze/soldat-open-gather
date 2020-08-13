@@ -183,6 +183,9 @@ module.exports = class Gather extends Context {
           await this.usersRepository.create(userId, pin)
         }
 
+        // update server password
+        await this.gatherRepository.changePassword(ip, port, password)
+
         let message = `Server: soldat://${ip}:${port}/${password}\n`
         message += 'Time: **' +
         (
