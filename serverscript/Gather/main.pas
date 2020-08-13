@@ -3,7 +3,7 @@ var
   serverURL: String;
   mainServerIp: String;
   gamePrepared: Boolean;
-  rounds: Boolean;
+  inTieBreak: Boolean;
 
 function sendCommand (command: String): String;
 begin
@@ -14,7 +14,7 @@ begin
     );
   except
     WriteLn('Could not possible call command, maybe wrong token or offline server?!');
-    Result := '-'
+    Result := '-';
   end;
 end;
 
@@ -22,6 +22,18 @@ function parseGameStyle (): String;
 begin
   if Game.GameStyle = 2 then Result := 'tm'
   else Result := 'ctf';
+end;
+
+procedure tiebreakMap ();
+var tiebreakMapFromCommand: String;
+begin
+  tiebreakMapFromCommand := sendCommand(
+    '!tiebreakmap ' +
+    mainServerIp + ' ' +
+    IntToStr(Game.ServerPort)
+  );
+
+  if not (tiebreakMapFromCommand = '-') then Map.SetMap(tiebreakMapFromCommand);
 end;
 
 procedure prepareGame ();
@@ -71,8 +83,12 @@ begin
   WriteLn('Status: ' + status)
   if (status = 'waiting_server') and (gamePrepared <> True) then prepareGame();
   if (status = 'waiting') then begin
-    rounds := False;
     gamePrepared := False;
+    inTieBreak := False;
+  end;
+  if (status = 'tiebreak') and not inTieBreak then begin
+    inTieBreak := True
+    tiebreakMap();
   end;
 end;
 
@@ -87,10 +103,6 @@ begin
   Score := Game.Teams[1].Score + Game.Teams[2].Score
   if (Game.ScoreLimit = Score) or (Game.TimeLeft = 0) then begin
     sendMapStatistics();
-
-    if rounds then gamePrepared := false;
-
-    rounds := not rounds;
   end;
 end;
 
@@ -114,6 +126,7 @@ begin
 end;
 
 begin
+  inTieBreak := False;
   gamePrepared := False;
   serverToken := ReadINI(Script.Dir + 'config.ini', 'Server', 'token', '-');
   serverURL   := ReadINI(Script.Dir + 'config.ini', 'Server', 'url', '-');
@@ -125,7 +138,7 @@ begin
     Game.TickThreshold := 60 * 5; // 1 minute
     Game.OnClockTick := @clockTick;
     Map.OnBeforeMapChange := @beforeMapChange;
-    breathe();
+    //breathe();
   end else begin
     WriteLn('Server configuration mismatch');
     WriteLn('serverToken' + serverToken);

@@ -39,5 +39,30 @@ module.exports = {
     voiceclancategory: process.env.CHANNEL_VOICECLANCATEGORY,
     gather: process.env.CHANNEL_GATHER,
     botcommands: process.env.CHANNEL_BOTCOMMANDS
-  }
+  },
+
+  // TODO Refactor, send maps to DB
+  tiebreakMaps: [
+    'ctf_Aftermath',
+    'ctf_Amnesia',
+    'ctf_Arabic',
+    'ctf_Ash',
+    'ctf_Blade',
+    'ctf_Campeche',
+    'ctf_Cobra',
+    'ctf_Death',
+    'ctf_Division',
+    'ctf_Dropdown',
+    'ctf_Guardian',
+    'ctf_Hormone',
+    'ctf_IceBeam',
+    'ctf_Lava',
+    'ctf_Nuubia',
+    'ctf_Paradigm',
+    'ctf_Pod',
+    'ctf_Rotten',
+    'ctf_Steel',
+    'ctf_Voland',
+    'ctf_Wretch'
+  ]
 }

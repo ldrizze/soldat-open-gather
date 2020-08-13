@@ -13,7 +13,9 @@ module.exports = class GatherSessions {
     }
   }
 
-  async create (sessionId, alpha, bravo) {
+  async create (sessionId, alpha, bravo, tiebreakmap) {
+    const tie = { ...this.mapsInfoStructure }
+    tie.mapName = tiebreakmap
     return this._collection().insertOne({
       sessionId,
       players: {
@@ -23,7 +25,7 @@ module.exports = class GatherSessions {
       maps: {
         alpha: this.mapsInfoStructure,
         bravo: this.mapsInfoStructure,
-        tie: this.mapsInfoStructure
+        tie
       },
       rounds: 0
     })

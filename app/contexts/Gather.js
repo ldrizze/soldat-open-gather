@@ -20,7 +20,8 @@ module.exports = class Gather extends Context {
       new Command('playerauth', ['server'], this._playerauth.bind(this)),
       new Command('checkplayerauth', ['server'], this._checkPlayerAuth.bind(this)),
       new Command('serverready', ['server'], this._serverReady.bind(this)),
-      new Command('info', ['everyone'], this._info.bind(this))
+      new Command('info', ['everyone'], this._info.bind(this)),
+      new Command('tiebreakmap', ['server'], this._tiebreakmap.bind(this))
     ]
     this.log = new Logger('Gather')
     this.gatherRepository = new GatherServers()
@@ -94,19 +95,21 @@ module.exports = class Gather extends Context {
         this._shuffleTeams(players)
         const alpha = players.slice(0, config.game.alpha)
         const bravo = players.slice(-1 * config.game.bravo)
+        const tiebreakMap = this._randomATiebreakMap()
         await this.gatherSessionsRepository.create(
-          sessionId, alpha, bravo
+          sessionId, alpha, bravo, tiebreakMap
         )
         return 'O jogo já está pronto, estamos preparando o servidor. ' +
         'Um invite para jogar será enviado via mensagem direta.\n' +
         'Time Alpha: [' +
         (
-          alpha.map(value => `<@${value}>`).join(',')
+          alpha.map(value => `<@${value}>`).join(', ')
         ) + ']\n' +
         'Time Bravo: [' +
         (
-          bravo.map(value => `<@${value}>`).join(',')
-        ) + ']'
+          bravo.map(value => `<@${value}>`).join(', ')
+        ) + ']\n' +
+        `Mapa de desempate: ${tiebreakMap}`
       } else {
         return `Adicionado a fila do server ${session.name}`
       }
@@ -191,9 +194,12 @@ module.exports = class Gather extends Context {
     const server = await this.gatherRepository.find(ip, port)
     if (server && server.sessionId) {
       const players = server.players.slice()
-      const session = await this.gatherSessionsRepository.find(server.sessionId)
-      const team = session.rounds === 0 ? 'alpha' : 'bravo'
+      let session = await this.gatherSessionsRepository.find(server.sessionId)
       session.rounds++
+      let team = 'alpha'
+      if (session.rounds === 2) team = 'bravo'
+      if (session.rounds === 3) team = 'tie'
+      else if (session.rounds > 3) team = `round_${session.rounds + 1}`
       if (session) {
         const playerScores = _playerScores.map(score => {
           const [steamId, k, d] = score.split('|')
@@ -209,12 +215,17 @@ module.exports = class Gather extends Context {
           playerScores
         )
 
-        if (session.rounds === config.game.rounds) {
-          // Tiebreak or endGame
+        // Renew session
+        session = await this.gatherSessionsRepository.find(server.sessionId)
+
+        if (
+          (session.rounds === config.game.rounds && this._hasAWinner(session)) ||
+          session.rounds === config.game.rounds + 1
+        ) {
           session.ended = true
           await this.gatherRepository.endGame(ip, port)
-        } else if (session.rounds === config.game.rounds + 1) {
-          // TODO Tiebreak round
+        } else if (session.rounds === config.game.rounds) {
+          this.gatherRepository.changeState(ip, port, 'tiebreak')
         }
 
         if (session.ended) { // Send BOT endgame message
@@ -228,8 +239,8 @@ module.exports = class Gather extends Context {
               `Alpha Score: ${scores[0]}\n` +
               `Bravo Score: ${scores[1]}\n` +
               (
-                players.map(value => `<@${value}> `).join(',')
-              ) + ' GG!'
+                players.map(value => `<@${value}>`).join(', ')
+              ) + ' <:gg:743341093659344898>'
             )
           }
         }
@@ -254,6 +265,17 @@ module.exports = class Gather extends Context {
         ) + ']'
       })
       event.channel.send(serversSummary)
+    }
+  }
+
+  async _tiebreakmap () {
+    const [, ip, port] = this.params
+    const server = await this.gatherRepository.find(ip, port)
+    if (server && server.sessionId) {
+      const session = await this.gatherSessionsRepository.find(server.sessionId)
+      if (session) {
+        return session.maps.tie.mapName
+      }
     }
   }
 
@@ -282,5 +304,16 @@ module.exports = class Gather extends Context {
       (+session.maps.bravo.score.bravo) +
       (+session.maps.tie.score.bravo)
     return [alpha, bravo]
+  }
+
+  _hasAWinner (session) {
+    const alpha = +session.maps.alpha.score.alpha > +session.maps.alpha.score.bravo
+    const bravo = +session.maps.bravo.score.alpha < +session.maps.bravo.score.bravo
+    return !(alpha && bravo)
+  }
+
+  _randomATiebreakMap () {
+    const n = Math.floor(Math.random() * (config.tiebreakMaps.length - 1))
+    return config.tiebreakMaps[n]
   }
 }
