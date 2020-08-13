@@ -8,6 +8,12 @@ module.exports = class GatherServers {
     this.db = getDB()
   }
 
+  async allNotOffline () {
+    return this._collection().find({
+      state: { $ne: 'offline' }
+    }).toArray()
+  }
+
   async create (ip, port, name, type = 'ctf', state = 'offline') {
     return this._collection().insertOne({
       ip, port, name, state, type, lastUpdate: moment().unix(), players: [], sessionId: ''

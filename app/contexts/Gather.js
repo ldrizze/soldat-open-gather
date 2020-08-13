@@ -19,7 +19,8 @@ module.exports = class Gather extends Context {
       new Command('round', ['server'], this._round.bind(this)),
       new Command('playerauth', ['server'], this._playerauth.bind(this)),
       new Command('checkplayerauth', ['server'], this._checkPlayerAuth.bind(this)),
-      new Command('serverready', ['server'], this._serverReady.bind(this))
+      new Command('serverready', ['server'], this._serverReady.bind(this)),
+      new Command('info', ['everyone'], this._info.bind(this))
     ]
     this.log = new Logger('Gather')
     this.gatherRepository = new GatherServers()
@@ -235,6 +236,24 @@ module.exports = class Gather extends Context {
       }
 
       return '1'
+    }
+  }
+
+  async _info (event) {
+    const servers = await this.gatherRepository.allNotOffline()
+    if (servers.length > 0) {
+      const serversSummary = servers.map(server => {
+        return `${server.name}\n` +
+        `Status: ${server.state}\n` +
+        'Jogadores: [' +
+        (
+          server.players.map(player => {
+            const member = event.guild.members.cache.get(player)
+            return member.nickname || member.user.username
+          }).join(', ')
+        ) + ']'
+      })
+      event.channel.send(serversSummary)
     }
   }
 
