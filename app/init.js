@@ -50,6 +50,7 @@ BOT.on('message', async (event) => {
           log.d('Executing command', command)
           contextInstance.setBotClient(BOT)
           const result = await command.fn(event)
+          log.i(result)
           if (result instanceof MD) event.author.send(result.toString())
           else if (typeof result === 'string') event.reply(result)
         } else {
@@ -100,6 +101,7 @@ app.get('/command', async (req, res) => {
         if (botReady) contextInstance.setBotClient(BOT)
         if (command.fn) {
           const result = await command.fn()
+          logWeb.i(result)
           if (result) return res.send(result)
         }
       }

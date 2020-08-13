@@ -46,8 +46,8 @@ module.exports = class Users {
     if (pin === -1) return false // prevent fake auth
     const user = await this.find(userId)
     if (user) {
-      await this._collection().updateOne({ pin }, {
-        $set: { steamId, auth: true, pinExpires: this._pinExpirationTimestamp() }
+      await this._collection().updateOne({ userId, pin }, {
+        $set: { steamId, auth: true }
       })
       return true
     }

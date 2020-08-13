@@ -141,12 +141,13 @@ module.exports = class Gather extends Context {
     if (server && server.sessionId) {
       const users = await this.usersRepository.get({
         userId: { $in: server.players },
-        pin
+        pin: +pin,
+        auth: false
       })
       if (users && users.length === 1) {
         const user = users[0]
 
-        return String(+(await this.usersRepository.authenticate(user.userId, pin, steamId)))
+        return String(+(await this.usersRepository.authenticate(user.userId, +pin, steamId)))
       }
     }
 
@@ -155,6 +156,7 @@ module.exports = class Gather extends Context {
 
   async _checkPlayerAuth () {
     const [, steamId] = this.params
+    if (!steamId) return
     const user = await this.usersRepository.findBySteamId(steamId)
     return user ? '1' : '0'
   }
@@ -170,6 +172,7 @@ module.exports = class Gather extends Context {
     if (server) {
       for (const userId of server.players) {
         const user = await this.usersRepository.find(userId)
+        const session = await this.gatherSessionsRepository.find(server.sessionId)
         if (user) { // user exists
           if (!user.auth) { // not auth, need generate pin
             pin = this._generatePin(100 * pinIndex++)
@@ -180,8 +183,12 @@ module.exports = class Gather extends Context {
           await this.usersRepository.create(userId, pin)
         }
 
-        let message = `Server: soldat://${ip}:${port}/${password}`
-        if (pin) message += `\n Pin: ${pin}`
+        let message = `Server: soldat://${ip}:${port}/${password}\n`
+        message += 'Time: **' +
+        (
+          session.players.alpha.indexOf(userId) !== -1 ? 'Alpha' : 'Bravo'
+        ) + '**'
+        if (pin) message += `\nPin: ${pin}`
         const userClient = guildClient.members.cache.get(userId)
         if (userClient) userClient.send(message)
       }

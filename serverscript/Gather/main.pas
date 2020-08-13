@@ -106,10 +106,12 @@ begin
   end;
 end;
 
-procedure playerAuth (Player: TActivePlayer; pin: String);
+function  playerAuth (Player: TActivePlayer; pin: String): String;
 begin
-  sendCommand(
+  Result := sendCommand(
     '!playerauth ' +
+    mainServerIp + ' ' +
+    IntToStr(Game.ServerPort) + ' ' +
     pin + ' ' +
     Player.SteamIDString
   );
@@ -125,6 +127,30 @@ begin
   Result := isAuth;
 end;
 
+function S3ConPlayerCommand (Player: TActivePlayer; Command: String): Boolean;
+var commandValue, cutCommand, authResult: String;
+begin
+  cutCommand := copy(Command, 1, 3);
+  if cutCommand = '/a ' then begin
+    commandValue := copy(Command, 4, Length(Command) - 3);
+    if Length(commandValue) > 0 then begin
+      authResult := playerAuth(Player, commandValue);
+      if authResult = '0' then Player.Tell('PIN invalido. Nao foi possivel autenticar-se.');
+    end;
+  end;
+  Result := True;
+end;
+
+procedure S3ConJoinTeam (Player: TActivePlayer; Team: TTeam);
+begin
+  if not checkAuth(Player) then begin
+    Player.Tell(
+      'Voce nao se autenticou ainda, digite /a e o pin recebido pelo bot, ex: /a 123'
+    );
+    Player.OnCommand := @S3ConPlayerCommand;
+  end else Player.OnCommand := nil;
+end;
+
 begin
   inTieBreak := False;
   gamePrepared := False;
@@ -138,7 +164,8 @@ begin
     Game.TickThreshold := 60 * 5; // 1 minute
     Game.OnClockTick := @clockTick;
     Map.OnBeforeMapChange := @beforeMapChange;
-    //breathe();
+    Game.Teams[1].onJoin := @S3ConJoinTeam;
+    Game.Teams[2].onJoin := @S3ConJoinTeam;
   end else begin
     WriteLn('Server configuration mismatch');
     WriteLn('serverToken' + serverToken);
