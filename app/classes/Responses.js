@@ -9,5 +9,12 @@ class Response {
 }
 
 class MD extends Response {}
+class Channel extends Response {
+  constructor (message, channel) {
+    super(message)
+    this.channel = channel
+  }
+}
 
 exports.MD = MD
+exports.Channel = Channel

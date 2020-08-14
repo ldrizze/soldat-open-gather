@@ -4,7 +4,7 @@ const Config = require('./config')
 const Logger = require('./classes/Logger')
 const Contexts = require('./contexts/contexts')
 const { ResponseError, Silence } = require('./classes/Errors')
-const { MD } = require('./classes/Responses')
+const { MD, Channel } = require('./classes/Responses')
 const ServerTokens = require('./repositories/ServerTokens')
 const express = require('express')
 
@@ -52,6 +52,7 @@ BOT.on('message', async (event) => {
           const result = await command.fn(event)
           log.i(result)
           if (result instanceof MD) event.author.send(result.toString())
+          else if (result instanceof Channel) event.channel.send(result.toString())
           else if (typeof result === 'string') event.reply(result)
         } else {
           log.d(`Command ${command.command} has no function in context`)

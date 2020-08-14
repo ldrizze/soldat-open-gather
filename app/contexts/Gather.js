@@ -5,7 +5,7 @@ const GatherServers = require('../repositories/GatherServers')
 const GatherSessions = require('../repositories/GatherSessions')
 const ServerTokens = require('../repositories/ServerTokens')
 const Users = require('../repositories/Users')
-const { MD } = require('../classes/Responses')
+const { MD, Channel } = require('../classes/Responses')
 const config = require('../config')
 
 module.exports = class Gather extends Context {
@@ -100,22 +100,28 @@ module.exports = class Gather extends Context {
         await this.gatherSessionsRepository.create(
           sessionId, alpha, bravo, tiebreakMap
         )
-        return 'O jogo já está pronto, estamos preparando o servidor. ' +
-        'Um invite para jogar será enviado via mensagem direta.\n' +
-        'Time Alpha: [' +
-        (
-          alpha.map(value => `<@${value}>`).join(', ')
-        ) + ']\n' +
-        'Time Bravo: [' +
-        (
-          bravo.map(value => `<@${value}>`).join(', ')
-        ) + ']\n' +
-        `Mapa de desempate: ${tiebreakMap}`
+        return new Channel(
+          'O jogo já está pronto, estamos preparando o servidor. ' +
+          'Um invite para jogar será enviado via mensagem direta.\n' +
+          'Time Alpha: [' +
+          (
+            alpha.map(value => `<@${value}>`).join(', ')
+          ) + ']\n' +
+          'Time Bravo: [' +
+          (
+            bravo.map(value => `<@${value}>`).join(', ')
+          ) + ']\n' +
+          `Mapa de desempate: ${tiebreakMap}`,
+          config.channels.gather
+        )
       } else {
-        return `${session.name} [` +
-              (
-                session.players.map(player => `<@${player}>`).join(', ')
-              ) + ']'
+        return new Channel(
+          `${session.name} [` +
+          (
+            session.players.map(player => `<@${player}>`).join(', ')
+          ) + ']',
+          config.channels.gather
+        )
       }
     } else {
       return 'Não há nenhum servidor com vaga no momento. Digite !info para obter a lista de servidores'
@@ -123,10 +129,17 @@ module.exports = class Gather extends Context {
   }
 
   async _remove () {
-    const session = await this.gatherRepository.findPlayerSession(this.user)
+    let session = await this.gatherRepository.findPlayerSession(this.user)
     if (session && session.state === 'waiting') {
       await this.gatherRepository.removePlayer(session.ip, session.port, this.user)
-      return 'Removido com sucesso.'
+      session = await this.gatherRepository.find(session.ip, session.port)
+      return new Channel(
+        `${session.name} [` +
+        (
+          session.players.map(player => `<@${player}>`).join(', ')
+        ) + ']',
+        config.channels.gather
+      )
     } else {
       return 'Você não está em uma fila de espera.'
     }
