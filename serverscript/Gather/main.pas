@@ -145,7 +145,7 @@ procedure S3ConJoinTeam (Player: TActivePlayer; Team: TTeam);
 begin
   if not checkAuth(Player) then begin
     Player.Tell(
-      'Voce nao se autenticou ainda, digite /a e o pin recebido pelo bot, ex: /a 123'
+      'Caso você tenha recebido um PIN, digite /a e o pin recebido pelo bot, ex: /a 123'
     );
   end;
 end;
