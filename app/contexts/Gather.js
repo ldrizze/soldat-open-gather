@@ -105,11 +105,11 @@ module.exports = class Gather extends Context {
           'Um invite para jogar será enviado via mensagem direta.\n' +
           'Time Alpha: [' +
           (
-            alpha.map(value => `<@${value}>`).join(', ')
+            alpha.map(memberId => `<@${memberId}>`).join(', ')
           ) + ']\n' +
           'Time Bravo: [' +
           (
-            bravo.map(value => `<@${value}>`).join(', ')
+            bravo.map(memberId => `<@${memberId}>`).join(', ')
           ) + ']\n' +
           `Mapa de desempate: ${tiebreakMap}`,
           config.channels.gather
@@ -118,7 +118,7 @@ module.exports = class Gather extends Context {
         return new Channel(
           `${session.name} [` +
           (
-            session.players.map(player => `<@${player}>`).join(', ')
+            session.players.map(memberId => this._memberDisplayName(memberId)).join(', ')
           ) + ']',
           config.channels.gather
         )
@@ -136,7 +136,7 @@ module.exports = class Gather extends Context {
       return new Channel(
         `${session.name} [` +
         (
-          session.players.map(player => `<@${player}>`).join(', ')
+          session.players.map(memberId => this._memberDisplayName(memberId)).join(', ')
         ) + ']',
         config.channels.gather
       )
@@ -287,7 +287,7 @@ module.exports = class Gather extends Context {
         (
           server.players.map(player => {
             const member = event.guild.members.cache.get(player)
-            return member ? (member.nickname || member.user.username) : '?'
+            return member ? member.displayName : '?'
           }).join(', ')
         ) + ']\n\n'
       }).join('')
@@ -353,5 +353,19 @@ module.exports = class Gather extends Context {
   _randomATiebreakMap () {
     const n = Math.floor(Math.random() * (config.tiebreakMaps.length - 1))
     return config.tiebreakMaps[n]
+  }
+
+  _guild () {
+    return this.botClient ? this.botClient.guilds.cache.get(config.discordServerId) : null
+  }
+
+  _memberDisplayName (id) {
+    const guild = this._guild()
+    if (guild) {
+      const member = guild.members.cache.get(id)
+      if (member) return member.displayName
+    }
+
+    return '?'
   }
 }
