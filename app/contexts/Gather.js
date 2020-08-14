@@ -287,11 +287,11 @@ module.exports = class Gather extends Context {
         (
           server.players.map(player => {
             const member = event.guild.members.cache.get(player)
-            return member.nickname || member.user.username
+            return member ? (member.nickname || member.user.username) : '?'
           }).join(', ')
         ) + ']\n\n'
       }).join('')
-      event.channel.send(serversSummary)
+      event.channel.send('-\n' + serversSummary)
     }
   }
 
