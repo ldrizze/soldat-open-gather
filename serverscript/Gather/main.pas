@@ -5,6 +5,8 @@ var
   gamePrepared: Boolean;
   inTieBreak: Boolean;
   status: String;
+  tiebreakMapFromCommand: String;
+  i: Byte;
 
 function sendCommand (command: String): String;
 begin
@@ -26,15 +28,12 @@ begin
 end;
 
 procedure tiebreakMap ();
-var tiebreakMapFromCommand: String;
 begin
   tiebreakMapFromCommand := sendCommand(
     '!tiebreakmap ' +
     mainServerIp + ' ' +
     IntToStr(Game.ServerPort)
   );
-
-  if not (tiebreakMapFromCommand = '-') then Map.SetMap(tiebreakMapFromCommand);
 end;
 
 procedure prepareGame ();
@@ -85,6 +84,7 @@ begin
   if (status = 'waiting') then begin
     gamePrepared := False;
     inTieBreak := False;
+    tiebreakMapFromCommand := '-';
   end;
   if (status = 'tiebreak') and not inTieBreak then begin
     inTieBreak := True
@@ -101,10 +101,9 @@ procedure  beforeMapChange(next: String);
   var Score: Byte;
 begin
   Score := Game.Teams[1].Score + Game.Teams[2].Score
-  if
-    ((Game.ScoreLimit = Score) or (Game.TimeLeft = 0)) and
-    not (status = 'waiting') then
-      sendMapStatistics();
+  if ((Game.ScoreLimit = Score) or (Game.TimeLeft = 0)) and not (status = 'waiting') then begin
+    sendMapStatistics();
+  end;
 end;
 
 function  playerAuth (Player: TActivePlayer; pin: String): String;
@@ -148,14 +147,21 @@ begin
     Player.Tell(
       'Voce nao se autenticou ainda, digite /a e o pin recebido pelo bot, ex: /a 123'
     );
-    Player.OnCommand := @S3ConPlayerCommand;
-  end else Player.OnCommand := nil;
+  end;
+end;
+
+procedure S3COnSpeak (Player: TActivePlayer; Text: String);
+begin
+  if (Text = '!tb') and not (tiebreakMapFromCommand = '-') then begin
+    Map.SetMap(tiebreakMapFromCommand);
+  end;
 end;
 
 begin
   inTieBreak := False;
   gamePrepared := False;
   status := 'waiting';
+  tiebreakMapFromCommand := '-';
   serverToken := ReadINI(Script.Dir + 'config.ini', 'Server', 'token', '-');
   serverURL   := ReadINI(Script.Dir + 'config.ini', 'Server', 'url', '-');
   mainServerIp   := ReadINI(Script.Dir + 'config.ini', 'Server', 'ip', '-');
@@ -168,6 +174,10 @@ begin
     Map.OnBeforeMapChange := @beforeMapChange;
     Game.Teams[1].onJoin := @S3ConJoinTeam;
     Game.Teams[2].onJoin := @S3ConJoinTeam;
+    for i:=1 to 32 do begin
+      Players[i].OnSpeak := @S3COnSpeak;
+      Players[i].OnCommand := @S3ConPlayerCommand;
+    end;
   end else begin
     WriteLn('Server configuration mismatch');
     WriteLn('serverToken' + serverToken);
