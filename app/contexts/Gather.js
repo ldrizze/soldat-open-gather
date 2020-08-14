@@ -112,7 +112,10 @@ module.exports = class Gather extends Context {
         ) + ']\n' +
         `Mapa de desempate: ${tiebreakMap}`
       } else {
-        return `Adicionado a fila do server ${session.name}`
+        return `${session.name} [` +
+              (
+                session.players.map(player => `<@${player}>`).join(', ')
+              ) + ']'
       }
     } else {
       return 'Não há nenhum servidor com vaga no momento. Digite !info para obter a lista de servidores'
@@ -273,8 +276,8 @@ module.exports = class Gather extends Context {
             const member = event.guild.members.cache.get(player)
             return member.nickname || member.user.username
           }).join(', ')
-        ) + ']'
-      })
+        ) + ']\n\n'
+      }).join('')
       event.channel.send(serversSummary)
     }
   }
