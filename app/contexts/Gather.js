@@ -21,7 +21,8 @@ module.exports = class Gather extends Context {
       new Command('checkplayerauth', ['server'], this._checkPlayerAuth.bind(this)),
       new Command('serverready', ['server'], this._serverReady.bind(this)),
       new Command('info', ['everyone'], this._info.bind(this)),
-      new Command('tiebreakmap', ['server'], this._tiebreakmap.bind(this))
+      new Command('tiebreakmap', ['server'], this._tiebreakmap.bind(this)),
+      new Command('spec', ['everyone'], this._spec.bind(this))
     ]
     this.log = new Logger('Gather')
     this.gatherRepository = new GatherServers()
@@ -285,6 +286,17 @@ module.exports = class Gather extends Context {
       const session = await this.gatherSessionsRepository.find(server.sessionId)
       if (session) {
         return session.maps.tie.mapName
+      }
+    }
+  }
+
+  async _spec (event) {
+    const [, serverNumber] = this.params
+    if (serverNumber) {
+      const servers = await this.gatherRepository.getByNumber(serverNumber)
+      if (servers.length > 0) {
+        const server = servers[0]
+        event.member.send(`soldat://${server.ip}:${server.port}/${server.password}`)
       }
     }
   }

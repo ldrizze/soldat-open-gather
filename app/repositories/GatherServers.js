@@ -40,6 +40,12 @@ module.exports = class GatherServers {
     if (session.length > 0) return session[0]
   }
 
+  async getByNumber (number) {
+    return this._collection().find({
+      name: new RegExp(`#${number}$`, 'gi')
+    }).limit(1).toArray()
+  }
+
   async get (filter) {
     return this._collection().find(filter).toArray()
   }
