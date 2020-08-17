@@ -7,7 +7,7 @@
     "test": "mocha --timeout 5000 --exit",
     "start": "node app/init.js",
     "debug": "nodemon --watch app --exec node --inspect app/init.js",
-    "build": "docker-compose down --rmi local && docker-compose up -d"
+    "docker:build": "docker-compose down --rmi local && docker-compose up -d"
   },
   "keywords": [
     "soldat",
