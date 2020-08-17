@@ -14,7 +14,8 @@ module.exports = class Gather extends Context {
     this.commands = [
       new Command('breathe', ['server'], this._breathe.bind(this)),
       new Command('genservertoken', ['gatheradmin'], this._genServerToken.bind(this)),
-      new Command('addctf', ['everyone'], this._addCTF.bind(this)),
+      new Command('addctf', ['everyone'], this._add.bind(this)),
+      new Command('addtm', ['everyone'], this._add.bind(this)),
       new Command('del', ['everyone'], this._remove.bind(this)),
       new Command('round', ['server'], this._round.bind(this)),
       new Command('playerauth', ['server'], this._playerauth.bind(this)),
@@ -73,6 +74,8 @@ module.exports = class Gather extends Context {
         )
       } else if (session.name !== name) {
         await this.gatherRepository.changeName(ip, port, name)
+      } else if (session.type !== type) {
+        await this.gatherRepository.changeType(ip, port, type)
       } else {
         await this.gatherRepository.hearthBeat(ip, port)
       }
@@ -80,8 +83,10 @@ module.exports = class Gather extends Context {
     }
   }
 
-  async _addCTF () {
-    const availableSessions = await this.gatherRepository.available()
+  async _add () {
+    const [command] = this.params
+    const type = command === '!addctf' ? 'ctf' : 'tm'
+    const availableSessions = await this.gatherRepository.available(type)
     if (availableSessions.length > 0) {
       const session = availableSessions[0]
       const isPlayerInSession = await this.gatherRepository.findPlayerSession(this.user)
@@ -116,10 +121,10 @@ module.exports = class Gather extends Context {
         )
       } else {
         return new Channel(
-          `${session.name} [` +
+          `[${session.type.toUpperCase()}] ${session.name} [` +
           (
             session.players.map(memberId => this._memberDisplayName(memberId)).join(', ')
-          ) + ']',
+          ) + ']' + ` (${session.players.length}/${config.game.maxplayers})`,
           config.channels.gather
         )
       }
@@ -134,10 +139,10 @@ module.exports = class Gather extends Context {
       await this.gatherRepository.removePlayer(session.ip, session.port, this.user)
       session = await this.gatherRepository.find(session.ip, session.port)
       return new Channel(
-        `${session.name} [` +
+        `[${session.type.toUpperCase()}] ${session.name} [` +
         (
           session.players.map(memberId => this._memberDisplayName(memberId)).join(', ')
-        ) + ']',
+        ) + ']' + ` (${session.players.length}/${config.game.maxplayers})`,
         config.channels.gather
       )
     } else {
@@ -283,7 +288,8 @@ module.exports = class Gather extends Context {
       const serversSummary = servers.map(server => {
         return `${server.name}\n` +
         `Status: ${server.state}\n` +
-        'Jogadores: [' +
+        `Game style: ${server.type.toUpperCase()}\n` +
+        `Jogadores (${server.players.length}/${config.game.maxplayers}): [` +
         (
           server.players.map(player => {
             const member = event.guild.members.cache.get(player)

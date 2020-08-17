@@ -58,10 +58,10 @@ module.exports = class GatherServers {
     return this._collection().find({ state: 'running' }).toArray()
   }
 
-  async available () {
+  async available (type = 'ctf') {
     return this._collection().aggregate([
       {
-        $match: { state: 'waiting' }
+        $match: { state: 'waiting', type }
       },
       {
         $addFields: { playersCount: { $size: { $ifNull: ['$players', []] } } }
@@ -99,6 +99,10 @@ module.exports = class GatherServers {
 
   async changeName (ip, port, name) {
     return this._collection().updateOne({ ip, port }, { $set: { name, lastUpdate: moment().unix() } })
+  }
+
+  async changeType (ip, port, type) {
+    return this._collection().updateOne({ ip, port }, { $set: { type, lastUpdate: moment().unix() } })
   }
 
   async hearthBeat (ip, port) {

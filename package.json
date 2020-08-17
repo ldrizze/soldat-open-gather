@@ -1,6 +1,6 @@
 {
   "name": "soldatbr-bot",
-  "version": "0.2.12",
+  "version": "0.2.15",
   "description": "A Soldat Brazilian BOT competitive manager",
   "main": "dist/init.js",
   "scripts": {
