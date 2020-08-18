@@ -106,6 +106,8 @@ begin
       mainServerIp + ' ' +
       IntToStr(Game.ServerPort)
     );
+
+    if commandResult = '1' then tellAll('Um SUB foi encontrado. Aguarde até ele entrar.');
   end;
 end;
 
