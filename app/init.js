@@ -4,6 +4,7 @@ const Config = require('./config')
 const Logger = require('./classes/Logger')
 const Contexts = require('./contexts/contexts')
 const { ResponseError, Silence } = require('./classes/Errors')
+const { OnPresence } = require('./classes/Events')
 const { MD, Channel } = require('./classes/Responses')
 const ServerTokens = require('./repositories/ServerTokens')
 const express = require('express')
@@ -68,6 +69,12 @@ BOT.on('message', async (event) => {
         break
       }
     }
+  }
+})
+
+BOT.on('presenceUpdate', (event) => {
+  if (event) {
+    OnPresence.trigger(event)
   }
 })
 

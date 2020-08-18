@@ -4,13 +4,17 @@ const Logger = require('../classes/Logger')
 const GatherServers = require('../repositories/GatherServers')
 const GatherSessions = require('../repositories/GatherSessions')
 const ServerTokens = require('../repositories/ServerTokens')
+const { OnPresence } = require('../classes/Events')
 const Users = require('../repositories/Users')
 const { MD, Channel } = require('../classes/Responses')
 const config = require('../config')
+const log = new Logger('Gather')
 
-module.exports = class Gather extends Context {
+class Gather extends Context {
   constructor (user, channel, message) {
     super(user, channel, message)
+
+    // Commands
     this.commands = [
       new Command('breathe', ['server'], this._breathe.bind(this)),
       new Command('genservertoken', ['gatheradmin'], this._genServerToken.bind(this)),
@@ -23,9 +27,14 @@ module.exports = class Gather extends Context {
       new Command('serverready', ['server'], this._serverReady.bind(this)),
       new Command('info', ['everyone'], this._info.bind(this)),
       new Command('tiebreakmap', ['server'], this._tiebreakmap.bind(this)),
-      new Command('spec', ['everyone'], this._spec.bind(this))
+      new Command('spec', ['everyone'], this._spec.bind(this)),
+      new Command('createsub', ['server'], this._createsub.bind(this)),
+      new Command('addsub', ['everyone'], this._addsub.bind(this)),
+      new Command('delsub', ['everyone'], this._delsub.bind(this)),
+      new Command('callsub', ['server'], this._callsub.bind(this))
     ]
-    this.log = new Logger('Gather')
+
+    // Vars
     this.gatherRepository = new GatherServers()
     this.gatherSessionsRepository = new GatherSessions()
     this.serverTokensRepository = new ServerTokens()
@@ -35,11 +44,11 @@ module.exports = class Gather extends Context {
 
   async validate (roles) {
     const command = this._validateCommands()
-    this.log.d('Validated command', command)
+    log.d('Validated command', command)
 
     if (command) {
       const normalizedRoles = this._normalizeRoles(roles)
-      this.log.d('normalizedRoles', normalizedRoles)
+      log.d('normalizedRoles', normalizedRoles)
       if (this._validateCommandRoles(command, normalizedRoles)) {
         if (this.channel === config.channels.gather) return command
       }
@@ -323,11 +332,39 @@ module.exports = class Gather extends Context {
     }
   }
 
+  async _createsub () {
+
+  }
+
+  async _addsub () {
+
+  }
+
+  async _delsub () {
+
+  }
+
+  async _callsub () {
+
+  }
+
+  // Events methods
+  static async _removeOfflinePlayersFromQueue (event) {
+    const gatherRepository = new GatherServers()
+    if (event.user.presence.status === 'offline') {
+      const server = await gatherRepository.findPlayerSession(event.member.id)
+      if (server && server.state === 'waiting') {
+        await gatherRepository.removePlayer(server.ip, server.port, event.member.id)
+        log.i(`Player ${event.member.id} removed from server queue ${server.name}`)
+      }
+    }
+  }
+
+  // Help methods
   _generatePin (plus) {
     return plus + Math.floor(Math.random() * 99)
   }
 
-  // Help methods
   _shuffleTeams (players) {
     for (let i = players.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
@@ -375,3 +412,8 @@ module.exports = class Gather extends Context {
     return '?'
   }
 }
+
+// Events binds
+OnPresence.subscribe(Gather._removeOfflinePlayersFromQueue.bind(this))
+
+module.exports = Gather
