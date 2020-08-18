@@ -151,16 +151,23 @@ module.exports = class GatherServers {
   async getByOpenedSubSlots () {
     return this._collection().aggregate([
       {
-        $match: { state: 'running' }
+        $addFields: {
+          subscount: { $size: { $ifNull: ['$subs', []] } },
+          canaddsubs: {
+            $let: {
+              vars: {
+                subscount: { $size: { $ifNull: ['$subs', []] } }
+              },
+              in: { $lt: ['$$subscount', '$subslots'] }
+            }
+          }
+        }
       },
       {
-        $addFields: { subsCount: { $size: { $ifNull: ['$subs', []] } } }
+        $match: { canaddsubs: true }
       },
       {
-        $match: { subsCount: { $lt: '$subslots' } }
-      },
-      {
-        $sort: { subsCount: -1 }
+        $sort: { subscount: -1 }
       }
     ]).toArray()
   }
@@ -173,13 +180,21 @@ module.exports = class GatherServers {
     })
   }
 
-  async removeSub (ip, port, playerId) {
+  async callSub (ip, port, playerId) {
     return this._collection().updateOne({ ip, port }, {
       $pull: {
         subs: playerId
       },
       $inc: {
         subslots: -1
+      }
+    })
+  }
+
+  async removeSub (ip, port, playerId) {
+    return this._collection().updateOne({ ip, port }, {
+      $pull: {
+        subs: playerId
       }
     })
   }

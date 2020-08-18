@@ -336,8 +336,8 @@ class Gather extends Context {
   async _createsub () {
     let [, ip, port, num] = this.params
     const server = await this.gatherRepository.find(ip, port)
-    if (server && server.subslots === 0) {
-      num = num || 1
+    if (server && !server.subslots) {
+      num = +num || 1
       await this.gatherRepository.createSubQueue(ip, port, num)
       this._gatherChannel().send(`Precisamos de um sub no servidor ${server.name}, digite !sub para entrar na fila.`)
       return '1'
@@ -387,7 +387,7 @@ class Gather extends Context {
       this._guild().members.cache.get(firstPlayerInQueue).send(
         `[SUB] soldat://${server.ip}:${server.port}/${server.password}`
       )
-
+      await this.gatherRepository.callSub(ip, port, firstPlayerInQueue)
       return '1'
     }
 
