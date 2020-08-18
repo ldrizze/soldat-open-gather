@@ -177,6 +177,9 @@ module.exports = class GatherServers {
     return this._collection().updateOne({ ip, port }, {
       $pull: {
         subs: playerId
+      },
+      $inc: {
+        subslots: -1
       }
     })
   }
@@ -187,6 +190,15 @@ module.exports = class GatherServers {
     }).toArray()
 
     if (session.length > 0) return session[0]
+  }
+
+  async clearSub (ip, port) {
+    return this._collection().updateOne({ ip, port }, {
+      $set: {
+        subs: [],
+        subslots: 0
+      }
+    })
   }
 
   _collection () {

@@ -6,6 +6,8 @@ var
   inTieBreak: Boolean;
   status: String;
   tiebreakMapFromCommand: String;
+  subCalled: Boolean;
+  version: String;
   i: Byte;
 
 function sendCommand (command: String): String;
@@ -25,6 +27,12 @@ function parseGameStyle (): String;
 begin
   if Game.GameStyle = 2 then Result := 'tm'
   else Result := 'ctf';
+end;
+
+procedure tellAll (msg: String);
+var p: Byte;
+begin
+  for p := 1 to 32 do Players.Tell(msg);
 end;
 
 procedure tiebreakMap ();
@@ -75,6 +83,7 @@ begin
 end;
 
 procedure breathe ();
+var commandResult: String;
 begin
   status := sendCommand(
     '!breathe ' + mainServerIp + ' ' + IntToStr(Game.ServerPort) + ' ' + parseGameStyle() + ' ' + Game.ServerName
@@ -84,11 +93,19 @@ begin
   if (status = 'waiting') then begin
     gamePrepared := False;
     inTieBreak := False;
+    subCalled := False;
     tiebreakMapFromCommand := '-';
   end;
   if (status = 'tiebreak') and not inTieBreak then begin
     inTieBreak := True
     tiebreakMap();
+  end;
+  if (status = 'running') or (inTieBreak) then begin
+    commandResult := sendCommand(
+      '!callsub ' +
+      mainServerIp + ' ' +
+      IntToStr(Game.ServerPort)
+    );
   end;
 end;
 
@@ -106,7 +123,7 @@ begin
   end;
 end;
 
-function  playerAuth (Player: TActivePlayer; pin: String): String;
+function playerAuth (Player: TActivePlayer; pin: String): String;
 begin
   Result := sendCommand(
     '!playerauth ' +
@@ -151,21 +168,43 @@ begin
 end;
 
 procedure S3COnSpeak (Player: TActivePlayer; Text: String);
+var commandResult: String;
+    textCommand: String;
+    numSubs: String;
 begin
   if (Text = '!tb') and not (tiebreakMapFromCommand = '-') then begin
     Map.SetMap(tiebreakMapFromCommand);
   end;
+
+  textCommand := copy(Text, 1, 4);
+  if textCommand = '!sub' then begin
+    if Length(Text) > 4 then numSubs := copy(5, Length(Text));
+    else numSubs := '1';
+    commandResult := sendCommand(
+      '!createsub ' +
+      mainServerIp + ' ' +
+      IntToStr(Game.ServerPort) + ' ' +
+      numSubs
+    );
+    if commandResult = '1' then begin
+      subCalled := True;
+      tellAll('A fila de sub foi criada, aguarde até alguém entrar.');
+    end;
+  end;
 end;
 
 begin
+  version := '0.2.15';
   inTieBreak := False;
   gamePrepared := False;
+  subCalled := False;
   status := 'waiting';
   tiebreakMapFromCommand := '-';
   serverToken := ReadINI(Script.Dir + 'config.ini', 'Server', 'token', '-');
   serverURL   := ReadINI(Script.Dir + 'config.ini', 'Server', 'url', '-');
   mainServerIp   := ReadINI(Script.Dir + 'config.ini', 'Server', 'ip', '-');
 
+  WriteLn('Gather version: ' + version);
   if not (serverToken = '-') and
      not (serverURL = '-') and
      not (mainServerIp = '-') then begin

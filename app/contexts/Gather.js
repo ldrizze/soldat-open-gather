@@ -336,11 +336,13 @@ class Gather extends Context {
   async _createsub () {
     let [, ip, port, num] = this.params
     const server = await this.gatherRepository.find(ip, port)
-    if (server) {
+    if (server && server.subslots === 0) {
       num = num || 1
       await this.gatherRepository.createSubQueue(ip, port, num)
-      return new Channel(`Precisamos de um sub no servidor ${server.name}, digite !sub para entrar na fila.`)
+      this._gatherChannel().send(`Precisamos de um sub no servidor ${server.name}, digite !sub para entrar na fila.`)
+      return '1'
     }
+    return '0'
   }
 
   async _addsub () {
@@ -378,11 +380,24 @@ class Gather extends Context {
   }
 
   async _callsub () {
+    const [, ip, port] = this.params
+    const server = await this.gatherRepository.find(ip, port)
+    if (server && server.subs.length > 0) {
+      const firstPlayerInQueue = server.subs[0]
+      this._guild().members.cache.get(firstPlayerInQueue).send(
+        `[SUB] soldat://${server.ip}:${server.port}/${server.password}`
+      )
 
+      return '1'
+    }
+
+    return '0'
   }
 
   async _suboff () {
-
+    const [, ip, port] = this.params
+    await this.gatherRepository.clearSub(ip, port)
+    return '1'
   }
 
   // Events methods
@@ -437,6 +452,10 @@ class Gather extends Context {
 
   _guild () {
     return this.botClient ? this.botClient.guilds.cache.get(config.discordServerId) : null
+  }
+
+  _gatherChannel () {
+    return this._guild().channels.cache.get(config.channels.gather)
   }
 
   _memberDisplayName (id) {
