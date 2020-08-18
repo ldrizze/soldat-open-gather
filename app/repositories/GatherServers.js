@@ -23,6 +23,8 @@ module.exports = class GatherServers {
       type,
       lastUpdate: moment().unix(),
       players: [],
+      subs: [],
+      subslots: 0,
       sessionId: '',
       password: '123456'
     })
@@ -127,7 +129,9 @@ module.exports = class GatherServers {
         state: 'waiting',
         lastUpdate: moment().unix(),
         sessionId: '',
-        players: []
+        players: [],
+        subslots: 0,
+        subs: []
       }
     })
   }
@@ -135,6 +139,51 @@ module.exports = class GatherServers {
   async findPlayerSession (playerId) {
     const session = await this._collection().find({
       players: { $in: [playerId] }
+    }).toArray()
+
+    if (session.length > 0) return session[0]
+  }
+
+  async createSubQueue (ip, port, subslots) {
+    return this._collection().updateOne({ ip, port }, { $set: { subslots, subs: [] } })
+  }
+
+  async getByOpenedSubSlots () {
+    return this._collection().aggregate([
+      {
+        $match: { state: 'running' }
+      },
+      {
+        $addFields: { subsCount: { $size: { $ifNull: ['$subs', []] } } }
+      },
+      {
+        $match: { subsCount: { $lt: '$subslots' } }
+      },
+      {
+        $sort: { subsCount: -1 }
+      }
+    ]).toArray()
+  }
+
+  async addSub (ip, port, playerId) {
+    return this._collection().updateOne({ ip, port }, {
+      $addToSet: {
+        subs: playerId
+      }
+    })
+  }
+
+  async removeSub (ip, port, playerId) {
+    return this._collection().updateOne({ ip, port }, {
+      $pull: {
+        subs: playerId
+      }
+    })
+  }
+
+  async findPlayerInSubQueue (playerId) {
+    const session = await this._collection().find({
+      subs: { $in: [playerId] }
     }).toArray()
 
     if (session.length > 0) return session[0]

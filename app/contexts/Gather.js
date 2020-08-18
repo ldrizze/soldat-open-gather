@@ -29,9 +29,10 @@ class Gather extends Context {
       new Command('tiebreakmap', ['server'], this._tiebreakmap.bind(this)),
       new Command('spec', ['everyone'], this._spec.bind(this)),
       new Command('createsub', ['server'], this._createsub.bind(this)),
-      new Command('addsub', ['everyone'], this._addsub.bind(this)),
+      new Command('sub', ['everyone'], this._addsub.bind(this)),
       new Command('delsub', ['everyone'], this._delsub.bind(this)),
-      new Command('callsub', ['server'], this._callsub.bind(this))
+      new Command('callsub', ['server'], this._callsub.bind(this)),
+      new Command('suboff', ['server'], this._suboff.bind(this))
     ]
 
     // Vars
@@ -333,18 +334,54 @@ class Gather extends Context {
   }
 
   async _createsub () {
-
+    let [, ip, port, num] = this.params
+    const server = await this.gatherRepository.find(ip, port)
+    if (server) {
+      num = num || 1
+      await this.gatherRepository.createSubQueue(ip, port, num)
+      return new Channel(`Precisamos de um sub no servidor ${server.name}, digite !sub para entrar na fila.`)
+    }
   }
 
   async _addsub () {
-
+    const playerAlreadyInQueue = await this.gatherRepository.findPlayerInSubQueue(this.user)
+    if (playerAlreadyInQueue) return 'Você já está em uma fila de sub. Digite !delsub para sair dela.'
+    const servers = await this.gatherRepository.getByOpenedSubSlots()
+    if (servers.length > 0) {
+      const server = servers[0]
+      server.subs.push(this.user)
+      await this.gatherRepository.addSub(server.ip, server.port, this.user)
+      return new Channel(
+        `[${server.type.toUpperCase()}-SUB] ${server.name} [` +
+        (
+          server.subs.map(memberId => this._memberDisplayName(memberId)).join(', ')
+        ) + ']' + ` (${server.subs.length}/${server.subslots})`,
+        config.channels.gather
+      )
+    } else {
+      return 'Não há filas abertas.'
+    }
   }
 
   async _delsub () {
-
+    let server = await this.gatherRepository.findPlayerInSubQueue(this.user)
+    if (!server) return 'você não está em uma fila de sub.'
+    await this.gatherRepository.removeSub(server.ip, server.port, this.user)
+    server = await this.gatherRepository.find(server.ip, server.port)
+    return new Channel(
+      `[${server.type.toUpperCase()}-SUB] ${server.name} [` +
+      (
+        server.subs.map(memberId => this._memberDisplayName(memberId)).join(', ')
+      ) + ']' + ` (${server.subs.length}/${server.subslots})`,
+      config.channels.gather
+    )
   }
 
   async _callsub () {
+
+  }
+
+  async _suboff () {
 
   }
 
