@@ -111,7 +111,7 @@ class Gather extends Context {
         this._shuffleTeams(players)
         const alpha = players.slice(0, config.game.alpha)
         const bravo = players.slice(-1 * config.game.bravo)
-        const tiebreakMap = this._randomATiebreakMap()
+        const tiebreakMap = this._randomATiebreakMap(session.type)
         await this.gatherSessionsRepository.create(
           sessionId, alpha, bravo, tiebreakMap
         )
@@ -388,7 +388,7 @@ class Gather extends Context {
         `[SUB] soldat://${server.ip}:${server.port}/${server.password}`
       )
       await this.gatherRepository.callSub(ip, port, firstPlayerInQueue)
-      return '1'
+      return server.subslots === 1 ? '2' : '1'
     }
 
     return '0'
@@ -445,9 +445,9 @@ class Gather extends Context {
     return !(alpha && bravo)
   }
 
-  _randomATiebreakMap () {
-    const n = Math.floor(Math.random() * (config.tiebreakMaps.length - 1))
-    return config.tiebreakMaps[n]
+  _randomATiebreakMap (type) {
+    const n = Math.floor(Math.random() * (config.tiebreakMaps[type].length - 1))
+    return config.tiebreakMaps[type][n]
   }
 
   _guild () {

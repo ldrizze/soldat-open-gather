@@ -7,7 +7,7 @@ var
   status: String;
   tiebreakMapFromCommand: String;
   subCalled: Boolean;
-  version: String;
+  gatherVersion: String;
   i: Byte;
 
 function sendCommand (command: String): String;
@@ -30,9 +30,8 @@ begin
 end;
 
 procedure tellAll (msg: String);
-var p: Byte;
 begin
-  for p := 1 to 32 do Players.Tell(msg);
+  Players.Tell(msg);
 end;
 
 procedure tiebreakMap ();
@@ -101,13 +100,16 @@ begin
     tiebreakMap();
   end;
   if (status = 'running') or (inTieBreak) then begin
-    commandResult := sendCommand(
-      '!callsub ' +
-      mainServerIp + ' ' +
-      IntToStr(Game.ServerPort)
-    );
+    if subCalled then begin
+      commandResult := sendCommand(
+        '!callsub ' +
+        mainServerIp + ' ' +
+        IntToStr(Game.ServerPort)
+      );
 
-    if commandResult = '1' then tellAll('Um SUB foi encontrado. Aguarde até ele entrar.');
+      if commandResult = '1' then tellAll('Um SUB foi encontrado. Aguarde ate ele entrar.');
+      if commandResult = '2' then subCalled := False;
+    end;
   end;
 end;
 
@@ -162,9 +164,9 @@ end;
 
 procedure S3ConJoinTeam (Player: TActivePlayer; Team: TTeam);
 begin
-  if not checkAuth(Player) then begin
+  if (Player.SteamIDString <> 'S_0') and not (checkAuth(Player)) then begin
     Player.Tell(
-      'Caso você tenha recebido um PIN, digite /a e o pin recebido pelo bot, ex: /a 123'
+      'Caso voce tenha recebido um PIN, digite /a e o pin recebido pelo bot, ex: /a 123'
     );
   end;
 end;
@@ -180,7 +182,7 @@ begin
 
   textCommand := copy(Text, 1, 4);
   if textCommand = '!sub' then begin
-    if Length(Text) > 4 then numSubs := copy(5, Length(Text));
+    if Length(Text) > 4 then numSubs := copy(Text, 6, Length(Text))
     else numSubs := '1';
     commandResult := sendCommand(
       '!createsub ' +
@@ -190,13 +192,23 @@ begin
     );
     if commandResult = '1' then begin
       subCalled := True;
-      tellAll('A fila de sub foi criada, aguarde até alguém entrar.');
+      tellAll('A fila de sub foi criada, aguarde ate alguem entrar.');
     end;
+  end;
+
+  if Text = '!soff' then begin
+    sendCommand(
+      '!suboff ' +
+      mainServerIp + ' ' +
+      IntToStr(Game.ServerPort)
+    );
+    tellAll('Fila de sub removida.');
+    subCalled := False;
   end;
 end;
 
 begin
-  version := '0.2.15';
+  gatherVersion := '0.2.15';
   inTieBreak := False;
   gamePrepared := False;
   subCalled := False;
@@ -206,7 +218,7 @@ begin
   serverURL   := ReadINI(Script.Dir + 'config.ini', 'Server', 'url', '-');
   mainServerIp   := ReadINI(Script.Dir + 'config.ini', 'Server', 'ip', '-');
 
-  WriteLn('Gather version: ' + version);
+  WriteLn('Gather version: ' + gatherVersion);
   if not (serverToken = '-') and
      not (serverURL = '-') and
      not (mainServerIp = '-') then begin
