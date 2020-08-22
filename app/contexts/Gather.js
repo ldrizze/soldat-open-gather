@@ -261,7 +261,7 @@ class Gather extends Context {
         session = await this.gatherSessionsRepository.find(server.sessionId)
 
         if (
-          (session.rounds === config.game.rounds && this._hasAWinner(session)) ||
+          (session.rounds === config.game.rounds && this._isTiebreak(session)) ||
           session.rounds === config.game.rounds + 1
         ) {
           session.ended = true
@@ -439,10 +439,11 @@ class Gather extends Context {
     return [alpha, bravo]
   }
 
-  _hasAWinner (session) {
-    const alpha = +session.maps.alpha.score.alpha > +session.maps.alpha.score.bravo
-    const bravo = +session.maps.bravo.score.alpha < +session.maps.bravo.score.bravo
-    return !(alpha && bravo)
+  _isTiebreak (session) {
+    const firstMap = +session.maps.alpha.score.alpha > +session.maps.alpha.score.bravo
+    const secondMap = +session.maps.bravo.score.alpha > +session.maps.bravo.score.bravo
+    const scores = this._compondScores(session)
+    return !(firstMap === secondMap && scores[0] !== scores[1])
   }
 
   _randomATiebreakMap (type) {

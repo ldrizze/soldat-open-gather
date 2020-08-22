@@ -98,6 +98,7 @@ begin
   if (status = 'tiebreak') and not inTieBreak then begin
     inTieBreak := True
     tiebreakMap();
+    tellAll('Digite !tb para ir para o mapa de tiebreak');
   end;
   if (status = 'running') or (inTieBreak) then begin
     if subCalled then begin
