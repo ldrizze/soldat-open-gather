@@ -11,6 +11,10 @@ module.exports = class Context {
     this.botClient = client
   }
 
+  /**
+   * Simple validation of the command
+   * Override this to customize the command execution validation
+   */
   async validate () {
     const command = this._validateCommands()
     if (command) {
@@ -31,6 +35,11 @@ module.exports = class Context {
     }
   }
 
+  /**
+   * Validate if certain role are allowed to run certain command
+   * @param {string} command command string from interface
+   * @param {string} role role string from interface
+   */
   _validateCommandRole (command, role) {
     if (command.role instanceof Array) {
       return command.role.indexOf(role) !== -1
@@ -40,6 +49,11 @@ module.exports = class Context {
     return false
   }
 
+  /**
+   * Validate if multiple roles are allowed to run certain command
+   * @param {string} command command string from interface
+   * @param {Array<string>} roles roles array string from interface
+   */
   _validateCommandRoles (command, roles) {
     for (const role of roles) {
       if (this._validateCommandRole(command, role)) return true
