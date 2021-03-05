@@ -23,7 +23,7 @@ const client = new MongoClient(url, {
 
 const connected = new Promise(resolve => {
   client.connect(err => {
-    assert.equal(null, err)
+    assert.strictEqual(null, err)
     log.i('Connected')
     db = client.db('soldatbtbot')
     resolve()

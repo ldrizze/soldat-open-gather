@@ -19,7 +19,7 @@ exports.createClanAdmin = async () => {
     })
 
     client.connect(err => {
-      assert.equal(null, err)
+      assert.strictEqual(null, err)
       const db = client.db('soldatbtbot')
 
       const collection = db.collection('users')
@@ -43,12 +43,12 @@ exports.deleteClanAdmin = () => {
     })
 
     client.connect(err => {
-      assert.equal(null, err)
+      assert.strictEqual(null, err)
       const db = client.db('soldatbtbot')
 
       const collection = db.collection('users')
       collection.deleteMany({ user_id: 99 }, (err) => {
-        assert.equal(err, null)
+        assert.strictEqual(err, null)
         console.log('Admin test user deleted')
         client.close()
         resolve()
