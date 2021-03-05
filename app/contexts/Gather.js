@@ -30,7 +30,7 @@ class Gather extends Context {
       new Command('spec', ['everyone'], this._spec.bind(this)),
       // new Command('createsub', ['server'], this._createsub.bind(this)),
       new Command('sub', ['everyone'], this._addsub.bind(this)),
-      new Command('delsub', ['everyone'], this._delsub.bind(this)),
+      new Command('delsub', ['everyone'], this._delsub.bind(this))
       // new Command('callsub', ['server'], this._callsub.bind(this)),
       // new Command('suboff', ['server'], this._suboff.bind(this))
     ]
