@@ -14,3 +14,5 @@ Commits pattern: https://www.conventionalcommits.org/en/v1.0.0/
 - [ ] Multi language support
 - [ ] Change log system
 - [ ] Remove gargabe TODOS comments
+- [ ] Update command
+- [ ] Auto-update
